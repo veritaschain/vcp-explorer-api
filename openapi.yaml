@@ -1,0 +1,930 @@
+openapi: 3.1.0
+info:
+  title: VCP Explorer API
+  version: 1.1.0
+  description: |
+    **VeritasChain Protocol Explorer API v1.1**
+    
+    "Verify, Don't Trust" - Merkle Proof Verification & VCP Module Structure
+    
+    Production-ready API with cryptographic verification, advanced search, 
+    and full VCP Specification v1.0 compliance.
+    
+    ## Features
+    - RFC 6962 compliant Merkle Proof verification
+    - VCP module structure (TRADE/RISK/GOV)
+    - Advanced search with TraceID support
+    - Event certificates for regulatory compliance
+    - Fixed event type codes per VCP Spec v1.0
+    
+  contact:
+    name: VeritasChain Standards Organization
+    url: https://veritaschain.org
+    email: standards@veritaschain.org
+  license:
+    name: CC BY 4.0
+    url: https://creativecommons.org/licenses/by/4.0/
+
+servers:
+  - url: https://api-explorer.veritaschain.org/v1
+    description: Production server
+  - url: http://localhost:3001/v1
+    description: Development server
+
+tags:
+  - name: System
+    description: System status and health
+  - name: Events
+    description: Trading event queries and verification
+  - name: Verification
+    description: Merkle proof and certificate generation
+  - name: Entities
+    description: VC-Certified organizations
+
+paths:
+  /system/status:
+    get:
+      tags:
+        - System
+      summary: Get system status
+      description: Returns global statistics for the VCP Explorer
+      operationId: getSystemStatus
+      responses:
+        '200':
+          description: System status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /events:
+    get:
+      tags:
+        - Events
+      summary: Advanced event search
+      description: |
+        Search events with multiple filters including TraceID, symbol, 
+        time range, and algorithm ID.
+      operationId: searchEvents
+      parameters:
+        - name: trace_id
+          in: query
+          description: Transaction trace ID (UUID v7)
+          schema:
+            type: string
+            format: uuid
+          example: "01934e3a-6a1b-7c82-9d1b-0987654321dc"
+        - name: symbol
+          in: query
+          description: Trading symbol
+          schema:
+            type: string
+          example: "XAUUSD"
+        - name: event_type
+          in: query
+          description: Event type filter
+          schema:
+            $ref: '#/components/schemas/EventType'
+        - name: start_time
+          in: query
+          description: Start of time range (ISO8601)
+          schema:
+            type: string
+            format: date-time
+          example: "2025-11-24T00:00:00Z"
+        - name: end_time
+          in: query
+          description: End of time range (ISO8601)
+          schema:
+            type: string
+            format: date-time
+          example: "2025-11-24T23:59:59Z"
+        - name: algo_id
+          in: query
+          description: Algorithm identifier
+          schema:
+            type: string
+          example: "neural-scalper-v1.2"
+        - name: venue_id
+          in: query
+          description: Venue/broker identifier
+          schema:
+            type: string
+          example: "XNAS"
+        - name: limit
+          in: query
+          description: Maximum number of results (1-500)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 50
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventSummary'
+                  query:
+                    type: object
+                    description: Applied search filters
+                  total:
+                    type: integer
+                    description: Total number of results
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /events/recent:
+    get:
+      tags:
+        - Events
+      summary: Get recent events
+      description: Legacy endpoint for backward compatibility. Use /events for advanced search.
+      operationId: getRecentEvents
+      parameters:
+        - name: limit
+          in: query
+          description: Number of events to return (1-100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Recent events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /events/{id}:
+    get:
+      tags:
+        - Events
+      summary: Get event details
+      description: |
+        Returns complete event details with VCP module structure 
+        (TRADE/RISK/GOV).
+      operationId: getEventById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID (UUID v7)
+          schema:
+            type: string
+            format: uuid
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+      responses:
+        '200':
+          description: Event details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /events/{id}/proof:
+    get:
+      tags:
+        - Verification
+      summary: Get Merkle proof
+      description: |
+        Returns RFC 6962 compliant Merkle proof for external verification.
+        
+        **"Verify, Don't Trust"** - Enables auditors to verify event 
+        inclusion without trusting the API.
+      operationId: getMerkleProof
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID (UUID v7)
+          schema:
+            type: string
+            format: uuid
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+      responses:
+        '200':
+          description: Merkle proof retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerkleProof'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /events/{id}/certificate:
+    get:
+      tags:
+        - Verification
+      summary: Generate event certificate
+      description: |
+        Generates a complete regulatory-compliant certificate with 
+        all verification data.
+        
+        **Use cases:** Trader proof, regulatory submission, audit trail.
+      operationId: getEventCertificate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID (UUID v7)
+          schema:
+            type: string
+            format: uuid
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+      responses:
+        '200':
+          description: Certificate generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCertificate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /certified/entities:
+    get:
+      tags:
+        - Entities
+      summary: Get certified entities
+      description: Returns list of VC-Certified organizations
+      operationId: getCertifiedEntities
+      responses:
+        '200':
+          description: Entities retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CertifiedEntity'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Basic health check endpoint
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: "1.1.0"
+                  service:
+                    type: string
+                    example: "VCP Explorer API"
+
+components:
+  schemas:
+    SystemStatus:
+      type: object
+      required:
+        - total_events
+        - last_anchor
+        - active_nodes
+        - precision
+        - tier
+      properties:
+        total_events:
+          type: integer
+          description: Total number of events recorded
+          example: 12160243
+        last_anchor:
+          type: object
+          required:
+            - network
+            - block_number
+            - tx_hash
+            - anchored_at
+          properties:
+            network:
+              type: string
+              example: "ethereum-mainnet"
+            block_number:
+              type: integer
+              example: 1942055
+            tx_hash:
+              type: string
+              example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd"
+            anchored_at:
+              type: string
+              format: date-time
+              example: "2025-11-24T14:12:00Z"
+        active_nodes:
+          type: integer
+          description: Number of active VCP nodes
+          example: 42
+        precision:
+          $ref: '#/components/schemas/TimestampPrecision'
+        tier:
+          $ref: '#/components/schemas/ComplianceTier'
+
+    EventSummary:
+      type: object
+      required:
+        - event_id
+        - type
+        - event_type_code
+        - timestamp
+        - venue
+        - symbol
+        - hash_prefix
+        - status
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: Event identifier (UUID v7)
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+        type:
+          $ref: '#/components/schemas/EventType'
+        event_type_code:
+          type: integer
+          description: Fixed event type code (VCP Spec v1.0)
+          example: 2
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp (ISO8601)
+          example: "2025-11-24T14:02:05.123456789Z"
+        venue:
+          type: string
+          description: Venue/broker identifier
+          example: "XAUUSD_PROP"
+        symbol:
+          type: string
+          description: Trading symbol
+          example: "XAUUSD"
+        hash_prefix:
+          type: string
+          description: First 6 characters of event hash
+          example: "8f2a7b"
+        status:
+          $ref: '#/components/schemas/EventStatus'
+
+    EventDetail:
+      type: object
+      required:
+        - header
+        - payload
+        - security
+      properties:
+        header:
+          $ref: '#/components/schemas/EventHeader'
+        payload:
+          $ref: '#/components/schemas/EventPayload'
+        security:
+          $ref: '#/components/schemas/SecurityData'
+
+    EventHeader:
+      type: object
+      required:
+        - event_id
+        - trace_id
+        - timestamp_int
+        - timestamp_iso
+        - event_type
+        - event_type_code
+        - timestamp_precision
+        - clock_sync_status
+        - hash_algo
+        - venue_id
+        - symbol
+        - anchor_status
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+        trace_id:
+          type: string
+          format: uuid
+          description: Transaction trace ID (CAT Rule 613)
+          example: "01934e3a-6a1b-7c82-9d1b-0987654321dc"
+        timestamp_int:
+          type: string
+          description: Nanosecond epoch as STRING (avoids JS 2^53 limit)
+          example: "1732453325123456789"
+        timestamp_iso:
+          type: string
+          format: date-time
+          example: "2025-11-24T14:02:05.123456789Z"
+        event_type:
+          $ref: '#/components/schemas/EventType'
+        event_type_code:
+          type: integer
+          description: Fixed code per VCP Spec v1.0
+          example: 2
+        timestamp_precision:
+          $ref: '#/components/schemas/TimestampPrecision'
+        clock_sync_status:
+          $ref: '#/components/schemas/ClockSyncStatus'
+        hash_algo:
+          $ref: '#/components/schemas/HashAlgo'
+        venue_id:
+          type: string
+          example: "XAUUSD_PROP"
+        symbol:
+          type: string
+          example: "XAUUSD"
+        anchor_status:
+          $ref: '#/components/schemas/EventStatus'
+
+    EventPayload:
+      type: object
+      description: VCP module-structured payload
+      properties:
+        trade_data:
+          $ref: '#/components/schemas/VcpTradeModule'
+        vcp_risk:
+          $ref: '#/components/schemas/VcpRiskModule'
+        vcp_gov:
+          $ref: '#/components/schemas/VcpGovModule'
+
+    VcpTradeModule:
+      type: object
+      description: VCP-TRADE module
+      properties:
+        symbol:
+          type: string
+          example: "XAUUSD"
+        side:
+          type: string
+          enum: [BUY, SELL]
+          example: "BUY"
+        order_type:
+          type: string
+          example: "MARKET"
+        price:
+          type: string
+          description: Always string for precision
+          example: "2350.500"
+        order_size:
+          type: string
+          example: "5.00"
+        executed_qty:
+          type: string
+          example: "5.00"
+        execution_price:
+          type: string
+          example: "2350.48"
+        commission:
+          type: string
+          example: "1.95"
+        slippage:
+          type: string
+          example: "0.02"
+
+    VcpRiskModule:
+      type: object
+      description: VCP-RISK module
+      properties:
+        snapshot:
+          type: object
+          description: Risk parameters at event time
+          additionalProperties:
+            type: string
+          example:
+            news_trading_restricted: "false"
+            max_drawdown_limit: "10000.00"
+            exposure_utilization: "0.45"
+        triggered_controls:
+          type: array
+          items:
+            type: object
+            properties:
+              control_name:
+                type: string
+                example: "MaxOrderSize"
+              trigger_value:
+                type: string
+                example: "100000.00"
+              action:
+                type: string
+                enum: [REJECT, MODIFY, ALERT]
+                example: "REJECT"
+              timestamp:
+                type: string
+                example: "1732453325223456789"
+
+    VcpGovModule:
+      type: object
+      description: VCP-GOV module (AI governance & explainability)
+      properties:
+        algo_id:
+          type: string
+          example: "neural-scalper-v1.2"
+        algo_version:
+          type: string
+          example: "1.2.0"
+        algo_type:
+          type: string
+          enum: [AI_MODEL, RULE_BASED, HYBRID]
+          example: "AI_MODEL"
+        model_hash:
+          type: string
+          description: SHA-256 hash of model parameters
+          example: "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+        decision_factors:
+          type: object
+          properties:
+            features:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "rsi_14"
+                  value:
+                    type: string
+                    example: "72.5"
+                  weight:
+                    type: string
+                    example: "0.35"
+                  contribution:
+                    type: string
+                    description: SHAP/LIME value
+                    example: "0.28"
+            confidence_score:
+              type: string
+              example: "0.92"
+            explainability_method:
+              type: string
+              enum: [SHAP, LIME, GRADCAM, RULE_TRACE]
+              example: "SHAP"
+            rule_trace:
+              type: array
+              items:
+                type: string
+              example: ["rule_id_1", "rule_id_2"]
+        governance:
+          type: object
+          properties:
+            risk_classification:
+              type: string
+              enum: [HIGH, MEDIUM, LOW]
+              description: EU AI Act classification
+              example: "MEDIUM"
+            last_approval_by:
+              type: string
+              example: "op_john_doe"
+            approval_timestamp:
+              type: string
+              format: date-time
+              example: "2025-11-20T09:00:00Z"
+            testing_record_link:
+              type: string
+              format: uri
+              example: "https://internal.veritaschain.org/backtest/neural-scalper-v1.2"
+
+    SecurityData:
+      type: object
+      required:
+        - event_hash
+        - prev_hash
+        - signature
+        - sign_algo
+        - merkle_root
+      properties:
+        event_hash:
+          type: string
+          example: "8f2a7b9d1b0c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f"
+        prev_hash:
+          type: string
+          example: "00a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1"
+        signature:
+          type: string
+          description: Base64-encoded digital signature
+          example: "MEUCIQDXyz123abc456def789ghi012jkl345mno678pqr901stu234vwx567yza890=="
+        sign_algo:
+          $ref: '#/components/schemas/SignAlgo'
+        merkle_root:
+          type: string
+          example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+        anchor:
+          type: object
+          properties:
+            network:
+              type: string
+              example: "ethereum-mainnet"
+            tx_hash:
+              type: string
+              example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd"
+            block_number:
+              type: integer
+              example: 1942055
+            anchored_at:
+              type: string
+              format: date-time
+              example: "2025-11-24T14:10:00Z"
+
+    MerkleProof:
+      type: object
+      required:
+        - event_id
+        - event_hash
+        - merkle_proof
+        - anchor_info
+        - hash_algo
+        - verification_hint
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+        event_hash:
+          type: string
+          example: "8f2a7b9d1b0c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f"
+        merkle_proof:
+          type: object
+          required:
+            - root_hash
+            - leaf_index
+            - audit_path
+          properties:
+            root_hash:
+              type: string
+              example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+            leaf_index:
+              type: integer
+              example: 42
+            audit_path:
+              type: array
+              description: Sibling hashes for verification path
+              items:
+                type: string
+              example:
+                - "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b"
+                - "9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d"
+        anchor_info:
+          type: object
+          required:
+            - network
+            - tx_hash
+            - block_number
+            - anchored_at
+          properties:
+            network:
+              type: string
+              example: "ethereum-mainnet"
+            tx_hash:
+              type: string
+              example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd"
+            block_number:
+              type: integer
+              example: 1942055
+            anchored_at:
+              type: string
+              format: date-time
+              example: "2025-11-24T14:10:00Z"
+        hash_algo:
+          $ref: '#/components/schemas/HashAlgo'
+        verification_hint:
+          type: string
+          description: Instructions for manual verification
+          example: "RFC 6962: Compute leaf = SHA256(0x00 || canonical_json), then hash with each audit_path element using SHA256(0x01 || left || right) to match root_hash."
+
+    EventCertificate:
+      type: object
+      required:
+        - event_id
+        - generated_at
+        - system
+        - header
+        - payload
+        - security
+        - merkle_proof
+        - anchor_info
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          example: "01934e3a-7b2c-7f93-8f2a-1234567890ab"
+        generated_at:
+          type: string
+          format: date-time
+          example: "2025-11-24T15:00:00Z"
+        system:
+          type: object
+          properties:
+            vcp_version:
+              type: string
+              example: "1.0"
+            tier:
+              $ref: '#/components/schemas/ComplianceTier'
+        header:
+          $ref: '#/components/schemas/EventHeader'
+        payload:
+          $ref: '#/components/schemas/EventPayload'
+        security:
+          $ref: '#/components/schemas/SecurityData'
+        merkle_proof:
+          type: object
+          description: Same as MerkleProof.merkle_proof
+        anchor_info:
+          type: object
+          description: Same as MerkleProof.anchor_info
+
+    CertifiedEntity:
+      type: object
+      required:
+        - name
+        - type
+        - tier
+        - status
+        - verification_url
+        - audit_report
+      properties:
+        name:
+          type: string
+          example: "Alpha Quant Exchange"
+        type:
+          $ref: '#/components/schemas/EntityType'
+        tier:
+          $ref: '#/components/schemas/ComplianceTier'
+        status:
+          $ref: '#/components/schemas/EntityStatus'
+        verification_url:
+          type: string
+          format: uri
+          example: "https://explorer.veritaschain.org/entities/alpha-quant"
+        audit_report:
+          type: string
+          example: "2025-Q3"
+
+    # Enums
+    EventType:
+      type: string
+      enum:
+        - SIG  # 1
+        - ORD  # 2
+        - ACK  # 3
+        - EXE  # 4
+        - PRT  # 5
+        - REJ  # 6
+        - CXL  # 7
+        - MOD  # 8
+        - CLS  # 9
+        - ALG  # 20
+        - RSK  # 21
+        - AUD  # 22
+        - HBT  # 98
+        - ERR  # 99
+        - REC  # 100
+        - SNC  # 101
+      example: "ORD"
+
+    TimestampPrecision:
+      type: string
+      enum: [NANOSECOND, MICROSECOND, MILLISECOND]
+      example: "NANOSECOND"
+
+    ComplianceTier:
+      type: string
+      enum: [PLATINUM, GOLD, SILVER]
+      example: "PLATINUM"
+
+    ClockSyncStatus:
+      type: string
+      enum: [PTP_LOCKED, NTP_SYNCED, BEST_EFFORT, UNRELIABLE]
+      example: "PTP_LOCKED"
+
+    HashAlgo:
+      type: string
+      enum: [SHA256, SHA3_256, BLAKE3]
+      example: "SHA256"
+
+    SignAlgo:
+      type: string
+      enum: [ED25519, ECDSA_SECP256K1, RSA_2048]
+      example: "ED25519"
+
+    EventStatus:
+      type: string
+      enum: [PENDING, ANCHORED, VERIFIED]
+      example: "ANCHORED"
+
+    EntityType:
+      type: string
+      enum: [EXCHANGE, PROP_FIRM, BROKER, FUND]
+      example: "EXCHANGE"
+
+    EntityStatus:
+      type: string
+      enum: [COMPLIANT, PENDING, REVOKED, SUSPENDED]
+      example: "COMPLIANT"
+
+    ApiError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "invalid_event_id"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Event ID must be a valid UUID v7 format"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "invalid_parameter"
+            message: "Limit must be a number between 1 and 100"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "not_found"
+            message: "Event not found"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "internal_error"
+            message: "An unexpected error occurred"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for future authentication (not required in v1.1)
+
+security: []
