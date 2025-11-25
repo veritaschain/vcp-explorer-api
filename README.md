@@ -80,3 +80,9 @@ See complete API reference, examples, and deployment guides in the sections belo
   </a>
 </p>
 
+<p>
+  Source code for the VCP Explorer GUI is available at:<br>
+  <a href="https://github.com/veritaschain/vcp-explorer-gui">
+    https://github.com/veritaschain/vcp-explorer-gui
+  </a>
+</p>
