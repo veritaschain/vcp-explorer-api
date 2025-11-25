@@ -71,3 +71,12 @@ See complete API reference, examples, and deployment guides in the sections belo
 **Version**: 1.1.0 | **VCP Spec**: v1.0 | **Status**: Production Ready
 
 *"Verify, Don't Trust" - Built by VSO*
+
+<h2>Conformance Testing & Example Payloads</h2>
+<p>
+  Official VCP v1.0 conformance tests and example payload collections are available at:<br>
+  <a href='https://github.com/veritaschain/vcp-conformance-guide'>
+    https://github.com/veritaschain/vcp-conformance-guide
+  </a>
+</p>
+
