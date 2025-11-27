@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="public/vcp-logo.svg" alt="VCP Explorer" width="80" height="80">
-</p>
-
 <h1 align="center">VCP Explorer</h1>
 
 <p align="center">
