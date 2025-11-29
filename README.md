@@ -224,9 +224,6 @@ See [LICENSE](LICENSE) for details.
 | Project | Description |
 |---------|-------------|
 | [vcp-spec](https://github.com/veritaschain/vcp-spec) | VCP Specification v1.0 |
-| [vcp-sdk-ts](https://github.com/veritaschain/vcp-sdk-ts) | TypeScript SDK |
-| [vcp-sdk-py](https://github.com/veritaschain/vcp-sdk-py) | Python SDK |
-| [vcp-mql-bridge](https://github.com/veritaschain/vcp-mql-bridge) | MQL4/5 Integration |
 
 ---
 
