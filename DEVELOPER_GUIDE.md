@@ -1,5 +1,10 @@
 # VCP Explorer API v1.1 - Developer Guide
 
+> **Current server scope:** these are integration examples. The server returns mock
+> data, and some examples describe capabilities beyond the implementation. Check
+> the [README implementation notes](README.md#differences-from-the-integration-documents)
+> before relying on filters, response shapes, or cryptographic verification.
+
 ## 📚 Documentation Files
 
 This package includes three essential files for API integration:
@@ -46,8 +51,9 @@ cp types.ts src/api/vcp-types.ts
 # @veritaschain/explorer-types
 ```
 
-### 3. `README.md` - API Documentation
-**Purpose:** Human-readable API reference with examples
+### 3. `API_REFERENCE.md` - API Documentation
+**Purpose:** Detailed API descriptions and response examples. See `README.md` for
+setup, current implementation behavior, limitations, and canonical VCP status.
 
 ---
 

@@ -6,6 +6,10 @@ info:
     **VeritasChain Protocol Explorer API v1.1**
     
     "Verify, Don't Trust" - Merkle Proof Verification & VCP Module Structure
+
+    Implementation scope: the current server returns mock data. Some descriptions
+    below describe intended capabilities beyond the implementation. See README.md
+    for actual filters, response differences, and verification limitations.
     
     Production-ready API with cryptographic verification, advanced search, 
     and full VCP Specification v1.0 compliance.
@@ -22,8 +26,8 @@ info:
     url: https://veritaschain.org
     email: standards@veritaschain.org
   license:
-    name: CC BY 4.0
-    url: https://creativecommons.org/licenses/by/4.0/
+    name: Apache-2.0
+    url: https://github.com/veritaschain/vcp-explorer-api/blob/main/LICENSE
 
 servers:
   - url: https://api-explorer.veritaschain.org/v1

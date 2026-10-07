@@ -22,7 +22,7 @@
     "compliance"
   ],
   "author": "VeritasChain Standards Organization (VSO)",
-  "license": "CC-BY-4.0",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/veritaschain/vcp-explorer-api"

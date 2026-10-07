@@ -5,7 +5,7 @@
  * Complete type definitions for frontend development
  * 
  * @version 1.1.0
- * @license CC BY 4.0
+ * @license Apache-2.0 — see LICENSE
  */
 
 // ============================================================================
