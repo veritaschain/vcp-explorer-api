@@ -1,5 +1,12 @@
 # VCP Explorer API v1.1 - Complete API Reference
 
+> **Implementation scope:** the current server uses mock data. See the
+> [README implementation notes](README.md#differences-from-the-integration-documents)
+> for implemented filters, response differences, and verification limitations.
+> Production-readiness and compliance language below describes intended capabilities,
+> not validated properties of this server. See the
+> [versioning notes](README.md#vcp-specification-and-versioning) for canonical VCP status.
+
 **"Verify, Don't Trust" - Merkle Proof Verification & VCP Module Structure**
 
 Production-ready API with cryptographic verification, advanced search, and full VCP Specification v1.0 compliance.
@@ -617,7 +624,8 @@ npm run format   # Prettier formatting
 
 ## 📄 License
 
-CC BY 4.0 International - VeritasChain Standards Organization (VSO)
+Apache-2.0 — see the repository [LICENSE](LICENSE), the source of truth for this API.
+The separately maintained VCP specification has its own license.
 
 ---
 
