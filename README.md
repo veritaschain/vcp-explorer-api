@@ -15,15 +15,26 @@ perform cryptographic verification, contact an external anchor, or persist event
 
 ## Quick Start
 
-Requires Node.js 18+ and npm 9+ as declared in [package.json](package.json).
-Use a maintained Node.js release satisfying those minimums.
+Requires **Node.js 24.22.1 or a later 24.x patch** and **npm 11+**, as declared
+in [package.json](package.json). Development and CI use **24.22.1** from
+[.nvmrc](.nvmrc). [.npmrc](.npmrc) enforces the declared engine requirements.
+
+This baseline includes the [October 2026 Node.js security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+Node.js 18.x and 20.x are end-of-life and are not supported.
 
 ```bash
 git clone https://github.com/veritaschain/vcp-explorer-api.git
 cd vcp-explorer-api
+nvm install
+nvm use
 npm install
 npm run dev
 ```
+
+If you do not use nvm, install Node.js 24.22.1 (or a later 24.x patch) through
+your runtime manager before running npm. For an existing deployment, update the
+host or container runtime, restart the API process, and verify `node --version`
+in that running environment; changing this repository does not update a server.
 
 The development command runs `tsx watch src/index.ts`. The API listens on port
 `3001` by default, with versioned routes under `http://localhost:3001/v1`.
