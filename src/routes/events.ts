@@ -27,10 +27,10 @@ router.get('/recent', async (req, res) => {
     }
 
     const events = await dataSource.getRecentEvents(limit);
-    res.json({ events });
+    return res.json({ events });
   } catch (error) {
     console.error('Error fetching recent events:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'internal_error',
       message: 'Failed to fetch recent events'
     });
@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
     const params: EventSearchParams = {
       trace_id: req.query.trace_id as string,
       symbol: req.query.symbol as string,
-      event_type: req.query.event_type as any,
+      event_type: req.query.event_type as EventSearchParams['event_type'],
       start_time: req.query.start_time as string,
       end_time: req.query.end_time as string,
       algo_id: req.query.algo_id as string,
@@ -64,14 +64,14 @@ router.get('/', async (req, res) => {
     });
 
     const events = await dataSource.searchEvents(params);
-    res.json({
+    return res.json({
       events,
       query: params,
       total: events.length
     });
   } catch (error) {
     console.error('Error searching events:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'internal_error',
       message: 'Failed to search events'
     });
@@ -105,10 +105,10 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    res.json(event);
+    return res.json(event);
   } catch (error) {
     console.error('Error fetching event:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'internal_error',
       message: 'Failed to fetch event details'
     });
@@ -141,10 +141,10 @@ router.get('/:id/proof', async (req, res) => {
       });
     }
 
-    res.json(proof);
+    return res.json(proof);
   } catch (error) {
     console.error('Error fetching Merkle proof:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'internal_error',
       message: 'Failed to fetch Merkle proof'
     });
@@ -176,10 +176,10 @@ router.get('/:id/certificate', async (req, res) => {
       });
     }
 
-    res.json(certificate);
+    return res.json(certificate);
   } catch (error) {
     console.error('Error generating certificate:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'internal_error',
       message: 'Failed to generate event certificate'
     });

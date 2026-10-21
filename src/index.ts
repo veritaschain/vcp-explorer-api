@@ -68,7 +68,7 @@ app.use('/v1/certified/entities', entitiesRoutes);
 // ====================================
 // Health Check
 // ====================================
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -80,7 +80,7 @@ app.get('/health', (req, res) => {
 // ====================================
 // Root Endpoint
 // ====================================
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
     name: 'VeritasChain Protocol Explorer API',
     version: '1.0.0',
@@ -111,7 +111,7 @@ app.use((req, res) => {
 // ====================================
 // Global Error Handler
 // ====================================
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'internal_error',
@@ -122,7 +122,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 // ====================================
 // Server Start
 // ====================================
-app.listen(PORT, () => {
+export const server = app.listen(PORT, () => {
   console.log('');
   console.log('✅ VCP Explorer API Server Started');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

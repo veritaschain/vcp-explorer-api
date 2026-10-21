@@ -11,7 +11,7 @@ const dataSource = new EntitiesDataSource();
  * GET /v1/certified/entities
  * VC-Certified取得企業の一覧を取得
  */
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const entities = await dataSource.getCertifiedEntities();
     res.json({ entities });
