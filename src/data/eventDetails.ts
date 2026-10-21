@@ -1,7 +1,7 @@
 // Events Mock Data v1.1 - VCP Module Structure
 // VeritasChain Standards Organization (VSO)
 
-import { EventDetail, MerkleProof, EventCertificate, EVENT_TYPE_CODES } from '../types';
+import { EventDetail, MerkleProof, EVENT_TYPE_CODES } from '../types';
 
 export const mockEventDetails: EventDetail[] = [
   {

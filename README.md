@@ -27,7 +27,7 @@ git clone https://github.com/veritaschain/vcp-explorer-api.git
 cd vcp-explorer-api
 nvm install
 nvm use
-npm install
+npm ci
 npm run dev
 ```
 
@@ -63,13 +63,11 @@ npm start
 `build` invokes TypeScript with [tsconfig.json](tsconfig.json), compiling `src/`
 into `dist/` (JavaScript, declarations, and source maps). `start` runs
 `node dist/index.js`; `dist/` is server output, not a static website.
-**Known build limitation (checked 2026-10-08):** the current source fails
-both type-checking and compilation with existing TypeScript diagnostics, including
-legacy fixture fields, unused declarations, route return paths, and the
-\`req.rateLimit\` type. Development execution does not type-check the source.
-Resolve those errors before treating the compiled output as deployable.
-The existing CI masks lint/build failures with `|| true`, so a green workflow
-alone does not establish a clean build.
+
+CI requires lint, strict type-checking, compilation, and HTTP regression tests to
+pass on Node.js 24.22.1. Run `npm run lint && npm run type-check && npm run build && npm test`
+before deploying. The tests run the compiled server and exercise successful and
+error responses, CORS error handling, and the rate limit.
 
 ## Configuration
 
@@ -177,10 +175,10 @@ express-rate-limit. Development uses TypeScript and tsx.
 | `npm run type-check` | TypeScript checking without emitting files |
 | `npm run build` | Compile the server |
 | `npm start` | Run compiled server output |
-| `npm run lint` | Invoke ESLint; no ESLint configuration is currently checked in |
+| `npm run lint` | Check source with ESLint |
 | `npm run format` | Format `src/**/*.ts` with Prettier |
 
-There is no `test` script or checked-in automated test suite. To contribute,
+`npm test` exercises the compiled API; run `npm run build` first. To contribute,
 create a branch, describe the change and its validation, and open a pull request.
 
 ## VCP Specification and Versioning

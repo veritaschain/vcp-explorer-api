@@ -68,7 +68,7 @@ export interface EventDetail {
       execution_price?: string;
       commission?: string;
       slippage?: string;
-      [key: string]: any;
+      [key: string]: unknown;
     };
     vcp_risk?: {
       snapshot: {
@@ -112,7 +112,7 @@ export interface EventDetail {
         testing_record_link?: string;
       };
     };
-    [key: string]: any; // Allow additional data
+    [key: string]: unknown; // Allow additional data
   };
   security: {
     event_hash: string;

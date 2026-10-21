@@ -11,7 +11,7 @@ const dataSource = new SystemDataSource();
  * GET /v1/system/status
  * システム全体の統計情報を取得
  */
-router.get('/status', async (req, res) => {
+router.get('/status', async (_req, res) => {
   try {
     const status = await dataSource.getSystemStatus();
     res.json(status);

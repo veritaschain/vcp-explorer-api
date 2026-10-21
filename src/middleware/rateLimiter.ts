@@ -1,7 +1,7 @@
 // Rate Limiter Middleware
 // VeritasChain Standards Organization (VSO)
 
-import rateLimit from 'express-rate-limit';
+import rateLimit, { AugmentedRequest } from 'express-rate-limit';
 
 /**
  * API全体に適用するレート制限
@@ -20,7 +20,7 @@ export const apiLimiter = rateLimit({
     res.status(429).json({
       error: 'rate_limit_exceeded',
       message: 'Too many requests from this IP, please try again later',
-      retry_after: req.rateLimit?.resetTime || 'unknown'
+      retry_after: (req as AugmentedRequest).rateLimit?.resetTime || 'unknown'
     });
   }
 });
