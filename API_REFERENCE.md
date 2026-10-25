@@ -443,7 +443,7 @@ GET /v1/events/:id/certificate
 GET /v1/certified/entities
 ```
 
-Returns a list of mock/demo organisations from `src/data/entities.ts`. These are not certified entities: VSO does not issue certificates, and no certification registry backs this endpoint.
+Returns a list of mock/demo organisations from `src/data/entities.ts`. These are not certified entities: VSO does not issue certifications itself, and no certification registry backs this endpoint.
 
 **Response:**
 ```json

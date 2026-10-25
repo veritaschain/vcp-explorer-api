@@ -294,7 +294,7 @@ paths:
       tags:
         - Entities
       summary: Get certified entities
-      description: Returns mock/demo organisations. Not a certification registry; VSO does not issue certificates.
+      description: Returns mock/demo organisations. Not a certification registry; VSO does not issue certifications itself.
       operationId: getCertifiedEntities
       responses:
         '200':

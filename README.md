@@ -4,7 +4,7 @@
 >
 > - This is first-party code by VeritasChain Co., Ltd., which operates the VeritasChain Standards Organization (VSO). Its fixtures and integration documents target VCP v1.0 / v1.1; both are superseded by VCP v1.2 (Released, tag `v1.2.0`).
 > - Conformance to any VCP tier, or to VAP, has not been independently established. There are zero external implementations of VAP or any of its profiles, including VCP.
-> - Not certified, and no certification registry is behind `/v1/certified/entities`: it returns mock/demo organisations. VSO does not issue certificates. The certification scheme requires a Conformity Assessment Body (CAB) independent of the scheme owner; the only registered CAB, VeritasChain Co., Ltd., is not independent (VAP v1.2 ERRATA E-2026-10-21).
+> - Not certified, and no certification registry is behind `/v1/certified/entities`: it returns mock/demo organisations. VSO does not issue certifications itself. The certification scheme requires a Conformity Assessment Body (CAB) independent of the scheme owner; the only registered CAB, VeritasChain Co., Ltd., is not independent (VAP v1.2 ERRATA E-2026-10-21).
 
 [![Package version](https://img.shields.io/badge/API_package-1.1.0-blue.svg)](package.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
