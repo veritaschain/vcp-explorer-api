@@ -9,15 +9,15 @@
 
 **"Verify, Don't Trust" - Merkle Proof Verification & VCP Module Structure**
 
-Production-ready API with cryptographic verification, advanced search, and full VCP Specification v1.0 compliance.
+Demo API returning mock data, with proof and certificate fixtures and search. VCP Specification v1.0 is the target format; conformance has not been established, and VCP v1.0 is superseded by v1.2 (tag `v1.2.0`).
 
 ---
 
 ## 🎯 What's New in v1.1
 
-### ✅ Verification Features (RFC 6962 Compliant)
+### Verification Features (fixtures; no server-side verification)
 - **Merkle Proof API** (`/v1/events/:id/proof`) - External verification capability
-- **Event Certificate** (`/v1/events/:id/certificate`) - Regulatory compliance export
+- **Event Certificate** (`/v1/events/:id/certificate`) - JSON export assembled from fixtures (not a compliance finding)
 
 ### ✅ VCP Module Structure
 - **VCP-TRADE** - Trading data
@@ -29,7 +29,7 @@ Production-ready API with cryptographic verification, advanced search, and full 
 - **Symbol, Time Range, Event Type** - Audit-ready filtering
 - **Algo ID** - Algorithm-specific event filtering
 
-### ✅ VCP Spec v1.0 Compliance
+### VCP Spec v1.0 Format Targets (conformance not established)
 - **Fixed Event Type Codes** (1=SIG, 2=ORD, etc.)
 - **String-based Timestamps** (avoids JS 2^53 limit)
 - **RFC 8785 JSON Canonicalization** + HashAlgo Enum (SHA256/SHA3_256/BLAKE3)
@@ -443,7 +443,7 @@ GET /v1/events/:id/certificate
 GET /v1/certified/entities
 ```
 
-Returns list of VC-Certified organizations.
+Returns a list of mock/demo organisations from `src/data/entities.ts`. These are not certified entities: VSO does not issue certificates, and no certification registry backs this endpoint.
 
 **Response:**
 ```json
@@ -638,7 +638,7 @@ The separately maintained VCP specification has its own license.
 ---
 
 **Version**: 1.1.0  
-**VCP Spec**: v1.0  
-**Status**: Production Ready
+**VCP Spec**: v1.0 (superseded by v1.2)  
+**Status**: Demo (mock data)
 
 *"Verify, Don't Trust" - Built by VSO with ❤️*
