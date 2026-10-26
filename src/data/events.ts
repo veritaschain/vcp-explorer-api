@@ -2,6 +2,7 @@
 // VeritasChain Standards Organization (VSO)
 
 import { EventSummary, EventDetail, MerkleProof, EventCertificate, EventSearchParams, EVENT_TYPE_CODES } from '../types';
+import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
 export const mockEventSummaries: EventSummary[] = [
   {
@@ -175,12 +176,20 @@ export class EventsDataSource {
       results = results.filter(e => e.venue === params.venue_id);
     }
 
-    // Time range filtering (simplified for mock)
+    // Compare exact nanoseconds on the original ISO summary timestamps.
+    // Do not use Date for fractional seconds: Date truncates at 1 ms.
+    // The HTTP route validates inputs before calling this data source.
     if (params.start_time || params.end_time) {
+      const startNs = params.start_time ? parseMockSearchTimestampNs(params.start_time) : null;
+      const endNs = params.end_time ? parseMockSearchTimestampNs(params.end_time) : null;
+      if ((params.start_time && startNs === null) || (params.end_time && endNs === null)) {
+        throw new RangeError('Invalid time range supplied to mock data source');
+      }
       results = results.filter(e => {
-        const eventTime = new Date(e.timestamp);
-        if (params.start_time && eventTime < new Date(params.start_time)) return false;
-        if (params.end_time && eventTime > new Date(params.end_time)) return false;
+        const eventNs = parseMockSearchTimestampNs(e.timestamp);
+        if (eventNs === null) return false;
+        if (startNs !== null && eventNs < startNs) return false;
+        if (endNs !== null && eventNs > endNs) return false;
         return true;
       });
     }
