@@ -70,8 +70,15 @@ paths:
         - Events
       summary: Advanced event search
       description: |
-        Search events with multiple filters including TraceID, symbol, 
-        time range, and algorithm ID.
+        Search synthetic event summaries by trace, symbol, event type, venue,
+        time window, or algorithm ID. Each supplied filter must be a single
+        non-empty scalar string; repeated and nested query parameters are
+        rejected with HTTP 400. Unknown event types are rejected.
+        The algorithm filter matches only detailed mock VCP-GOV algo_id
+        fixtures. Summaries with no matching detail are not included.
+        Time-window filtering currently uses JavaScript Date (millisecond
+        precision), so exact nanosecond boundaries are not established.
+        The total field counts only records on the returned page.
       operationId: searchEvents
       parameters:
         - name: trace_id
@@ -108,7 +115,7 @@ paths:
           example: "2025-11-24T23:59:59Z"
         - name: algo_id
           in: query
-          description: Algorithm identifier
+          description: VCP-GOV algorithm ID in the available detailed mock fixtures (records without a matching ID do not match)
           schema:
             type: string
           example: "neural-scalper-v1.2"
@@ -150,7 +157,7 @@ paths:
                     description: Applied search filters
                   total:
                     type: integer
-                    description: Total number of results
+                    description: Number of events on this returned page; not the global matching count
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':

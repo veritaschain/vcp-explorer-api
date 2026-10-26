@@ -95,13 +95,24 @@ GET /v1/events
 | `trace_id` | UUID v7 | No | Transaction trace ID (tracks SIG→ORD→ACK→EXE chain) | `01934e3a-6a1b-7c82-9d1b-0987654321dc` |
 | `symbol` | String | No | Trading symbol | `XAUUSD`, `EURUSD`, `BTCUSDT` |
 | `event_type` | String | No | Event type name (see Event Types table) | `ORD`, `EXE`, `REJ` |
-| `event_type_code` | Integer | No | Fixed VCP code (1-255) | `2` (=ORD), `4` (=EXE) |
 | `start_time` | ISO8601 | No | Start of time range (inclusive) | `2025-11-24T00:00:00Z` |
 | `end_time` | ISO8601 | No | End of time range (inclusive) | `2025-11-24T23:59:59Z` |
-| `algo_id` | String | No | Algorithm identifier from VCP-GOV | `neural-scalper-v1.2` |
+| `algo_id` | String | No | Match VCP-GOV algorithm ID from available detailed mock event fixtures (unknown or missing IDs do not match) | `neural-scalper-v1.2` |
 | `venue_id` | String | No | Venue/broker/exchange identifier | `XNAS`, `BINANCE` |
 | `limit` | Integer | No | Maximum results (1-500, default: 50) | `100` |
 | `offset` | Integer | No | Pagination offset (default: 0) | `50` |
+
+All supplied filters must be non-empty, single-valued query parameters; duplicate,
+array-form or nested-object forms receive `400 invalid_parameter` without querying
+the data source. Unknown `event_type` receives `400 invalid_event_type`.
+The `algo_id` mock search joins summary records to available VCP-GOV detail
+fixtures by event ID; it does not infer missing algorithm identities.
+`event_type_code` remains a response field, **not** a supported search parameter.
+`total` counts only events **on the returned page**, not the entire matching
+population. Mock time-range filtering currently uses millisecond-resolution
+JavaScript Date and does not establish correctness at nanosecond boundaries;
+invalid/reversed time-range handling is tracked separately in
+[API Issue #19](https://github.com/veritaschain/vcp-explorer-api/issues/19).
 
 **Event Types Reference:**
 
@@ -152,7 +163,7 @@ GET /v1/events?symbol=EURUSD&limit=100&offset=0
     }
   ],
   "query": { /* applied filters */ },
-  "total": 42
+  "total": 1
 }
 ```
 

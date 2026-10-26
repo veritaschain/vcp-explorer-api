@@ -4,7 +4,7 @@
 
 import { Router } from 'express';
 import { EventsDataSource } from '../data/events';
-import { EventSearchParams } from '../types';
+import { EventSearchParams, EVENT_TYPE_CODES } from '../types';
 
 const router = Router();
 const dataSource = new EventsDataSource();
@@ -63,6 +63,32 @@ router.get('/', async (req, res) => {
         message: limit === null
           ? 'Limit must be a single unsigned decimal safe integer greater than zero'
           : 'Offset must be a single unsigned decimal safe integer greater than or equal to zero'
+      });
+    }
+    // Express query objects may contain arrays or nested objects. These
+    // filters are scalar identifiers/strings, not implicitly coercible data.
+    // Reject them *before* invoking the data source.
+    const scalarFields = [
+      'trace_id', 'symbol', 'event_type', 'start_time',
+      'end_time', 'algo_id', 'venue_id'
+    ] as const;
+    for (const field of scalarFields) {
+      const value = req.query[field];
+      if (value !== undefined && (typeof value !== 'string' || value.length === 0)) {
+        return res.status(400).json({
+          error: 'invalid_parameter',
+          message: `${field} must be one non-empty string`
+        });
+      }
+    }
+    // The runtime guard above already rejects non-string event_type shapes;
+    // repeat the type narrowing here so TypeScript can prove the property key.
+    const eventType = req.query.event_type;
+    if (typeof eventType === 'string' &&
+        !Object.prototype.hasOwnProperty.call(EVENT_TYPE_CODES, eventType)) {
+      return res.status(400).json({
+        error: 'invalid_event_type',
+        message: 'Unsupported event_type value'
       });
     }
     const params: EventSearchParams = {

@@ -154,6 +154,19 @@ export class EventsDataSource {
       results = results.filter(e => e.symbol === params.symbol);
     }
 
+    if (params.algo_id) {
+      // The mock summary carries no algorithm ID. Resolve it only from
+      // available detailed VCP-GOV fixtures; missing details cannot match.
+      // Do not infer an algorithm from symbol, venue or event type.
+      const { mockEventDetails } = await import('./eventDetails');
+      const matchingIds = new Set(
+        mockEventDetails
+          .filter(detail => detail.payload.vcp_gov?.algo_id === params.algo_id)
+          .map(detail => detail.header.event_id)
+      );
+      results = results.filter(event => matchingIds.has(event.event_id));
+    }
+
     if (params.event_type) {
       results = results.filter(e => e.type === params.event_type);
     }
