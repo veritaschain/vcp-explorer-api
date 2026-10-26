@@ -81,8 +81,11 @@ router.get('/', async (req, res) => {
         });
       }
     }
-    if (req.query.event_type !== undefined &&
-        !Object.prototype.hasOwnProperty.call(EVENT_TYPE_CODES, req.query.event_type)) {
+    // The runtime guard above already rejects non-string event_type shapes;
+    // repeat the type narrowing here so TypeScript can prove the property key.
+    const eventType = req.query.event_type;
+    if (typeof eventType === 'string' &&
+        !Object.prototype.hasOwnProperty.call(EVENT_TYPE_CODES, eventType)) {
       return res.status(400).json({
         error: 'invalid_event_type',
         message: 'Unsupported event_type value'
