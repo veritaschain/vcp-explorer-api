@@ -1,0 +1,97 @@
+name: Explorer dependency diagnosis (temporary)
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/dependency-diagnostic.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: api
+            repository: veritaschain/vcp-explorer-api
+            revision: b4a5d304c9b111f354c40356b0453bf4a825d4d1
+          - component: gui
+            repository: veritaschain/vcp-explorer-gui
+            revision: 61833aeb0d2a4fbf15afcbca87528f6de3746ee6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.revision }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.1'
+      - name: Record baseline, try compatible lock-only fixes and test candidate
+        env:
+          REPORT_DIR: ${{ runner.temp }}/dependency-review
+          TARGET_REVISION: ${{ matrix.revision }}
+          TARGET_REPOSITORY: ${{ matrix.repository }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess, datetime
+          out = pathlib.Path(os.environ['REPORT_DIR'])
+          out.mkdir()
+          def capture(name, command, timeout=600):
+              p = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+              (out / (name + '.stdout')).write_bytes(p.stdout)
+              (out / (name + '.stderr')).write_bytes(p.stderr)
+              (out / (name + '.exit')).write_text(str(p.returncode) + '\n')
+              results[name] = {'command': command, 'exit': p.returncode}
+              return p
+          results = {}
+          revision = subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
+          assert revision == os.environ['TARGET_REVISION']
+          for name in ('package.json', 'package-lock.json'):
+              shutil.copyfile(name, out / ('baseline-' + name))
+          environment = {'repository': os.environ['TARGET_REPOSITORY'], 'revision': revision,
+                         'utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                         'node': subprocess.check_output(['node','--version'],text=True).strip(),
+                         'npm': subprocess.check_output(['npm','--version'],text=True).strip()}
+          (out / 'environment.json').write_text(json.dumps(environment, indent=2) + '\n')
+          def audit(name, extra=()):
+              p = capture(name, ['npm','audit','--package-lock-only','--ignore-scripts','--json', *extra])
+              obj = json.loads(p.stdout)
+              assert 'error' not in obj and 'vulnerabilities' in obj and 'metadata' in obj, obj
+              assert p.returncode in (0,1), p.returncode
+          try:
+              audit('baseline-all')
+              audit('baseline-production', ['--omit=dev'])
+              capture('compatible-fix', ['npm','audit','fix','--package-lock-only','--ignore-scripts','--json'])
+              for name in ('package.json', 'package-lock.json'):
+                  shutil.copyfile(name, out / ('candidate-' + name))
+              assert pathlib.Path('package.json').read_bytes() == (out / 'baseline-package.json').read_bytes(), 'MANIFEST_CHANGED'
+              audit('candidate-all')
+              audit('candidate-production', ['--omit=dev'])
+              p = capture('install', ['npm','ci','--ignore-scripts','--no-audit'])
+              assert p.returncode == 0, 'INSTALL_FAILED'
+              failed = []
+              for name, command in [
+                  ('lint',['npm','run','lint']),
+                  ('typecheck',['npm','run','type-check','--if-present']),
+                  ('build',['npm','run','build']),
+                  ('test',['npm','test']),
+              ]:
+                  if capture(name,command).returncode: failed.append(name)
+              capture('candidate-diff',['git','diff','--','package.json','package-lock.json'])
+              capture('working-tree',['git','status','--porcelain'])
+              if failed: raise RuntimeError('CANDIDATE_CHECKS_FAILED:' + ','.join(failed))
+          finally:
+              (out / 'commands.json').write_text(json.dumps(results, indent=2) + '\n')
+              hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file()}
+              (out / 'files.sha256.json').write_text(json.dumps(hashes, indent=2) + '\n')
+          PY
+      - name: Retain diagnostic reports and proposed locks only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dependency-review-${{ matrix.component }}
+          path: ${{ runner.temp }}/dependency-review/
+          if-no-files-found: error
+          retention-days: 14
