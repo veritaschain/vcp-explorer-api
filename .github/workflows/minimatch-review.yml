@@ -1,0 +1,126 @@
+name: API minimatch comparison (temporary)
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  compare:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [scoped-override, lint-upgrade]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 32e36b2425e4a78b687463e97d82e432a7fe58cf
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+      - name: Compare advisory fixes on unchanged source
+        env:
+          VARIANT: ${{ matrix.variant }}
+          REPORT_DIR: ${{ runner.temp }}/minimatch-report
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess, time
+          root = pathlib.Path.cwd()
+          out = pathlib.Path(os.environ['REPORT_DIR']); out.mkdir(parents=True)
+          variant = os.environ['VARIANT']; commands = []
+          def save(name, value):
+              (out / name).write_text(json.dumps(value, indent=2) + '\n')
+          def run(name, args, allowed=(0,), timeout=240):
+              started=time.time()
+              try:
+                  p=subprocess.run(args, capture_output=True, timeout=timeout, check=False)
+                  code=p.returncode; stdout=p.stdout; stderr=p.stderr
+              except subprocess.TimeoutExpired as e:
+                  code=124; stdout=e.stdout or b''; stderr=(e.stderr or b'')+b'\nTIMEOUT\n'
+              (out/(name+'.stdout')).write_bytes(stdout)
+              (out/(name+'.stderr')).write_bytes(stderr)
+              (out/(name+'.exit')).write_text(str(code)+'\n')
+              commands.append({'name':name,'argv':args,'exit':code,'seconds':round(time.time()-started,3)})
+              save('commands.json',commands)
+              if code not in allowed: raise RuntimeError(name+' failed: '+str(code))
+              return stdout
+          
+          def audit(name, omit=False):
+              args=['npm','audit','--json','--ignore-scripts']+(['--omit=dev'] if omit else [])
+              result=json.loads(run(name,args,allowed=(0,1)))
+              if result.get('error') or result.get('auditReportVersion') != 2 or not isinstance(result.get('vulnerabilities'),dict):
+                  raise RuntimeError('invalid audit response: '+name)
+              return result['metadata']['vulnerabilities']
+          
+          def tracked():
+              names=subprocess.check_output(['git','ls-files','-z']).decode().split('\0')
+              return {n:hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names if n}
+          summary={'variant':variant,'passed':False}
+          try:
+              sha=run('commit',['git','rev-parse','HEAD']).decode().strip()
+              if sha!='32e36b2425e4a78b687463e97d82e432a7fe58cf': raise RuntimeError('base drift')
+              for name,expected in {'package.json':'0d9e800e943689c480638b3c5d45fc0a82a28425dc4527781c5c2ea53fc8c437','package-lock.json':'b4156f06677c94289f9e3c43a91bb190c9cacddd11f2971437c734f52ccaac14'}.items():
+                  if hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()!=expected: raise RuntimeError('input hash differs')
+                  shutil.copyfile(name,out/('baseline-'+name))
+              before=tracked(); save('tracked-before.json',before)
+              run('node',['node','--version']); run('npm',['npm','--version']); run('registry',['npm','config','get','registry'])
+              for package in ['minimatch@9.0.7','@typescript-eslint/parser@8.72.0','@typescript-eslint/eslint-plugin@8.72.0']:
+                  run('metadata-'+package.replace('/','_').replace('@',''),['npm','view',package,'version','dependencies','peerDependencies','engines','dist','--json'])
+              summary['baseline_full']=audit('baseline-full')
+              summary['baseline_production']=audit('baseline-production',True)
+              package=json.loads(pathlib.Path('package.json').read_text())
+              if variant=='scoped-override':
+                  if 'overrides' in package: raise RuntimeError('unexpected existing overrides')
+                  package['overrides']={'@typescript-eslint/typescript-estree@6.21.0':{'minimatch':'9.0.7'}}
+              elif variant=='lint-upgrade':
+                  for name in ['@typescript-eslint/parser','@typescript-eslint/eslint-plugin']:
+                      package['devDependencies'][name]='8.72.0'
+              else: raise RuntimeError('unknown variant')
+              pathlib.Path('package.json').write_text(json.dumps(package,indent=2)+'\n')
+              run('resolve',['npm','install','--package-lock-only','--ignore-scripts','--no-audit','--no-fund'])
+              for name in ['package.json','package-lock.json']: shutil.copyfile(name,out/('candidate-'+name))
+              old=json.loads((out/'baseline-package-lock.json').read_text())['packages']
+              new=json.loads((out/'candidate-package-lock.json').read_text())['packages']
+              changes={k:{'before':old.get(k),'after':new.get(k)} for k in sorted(set(old)|set(new)) if old.get(k)!=new.get(k)}
+              save('lock-changes.json',changes)
+              runtime_old={k:v for k,v in old.items() if k and not v.get('dev',False)}
+              runtime_new={k:v for k,v in new.items() if k and not v.get('dev',False)}
+              summary['runtime_entries_unchanged']=runtime_old==runtime_new
+              if runtime_old!=runtime_new: raise RuntimeError('runtime dependency drift')
+              summary['candidate_full']=audit('candidate-full')
+              summary['candidate_production']=audit('candidate-production',True)
+              run('install',['npm','ci','--ignore-scripts','--no-audit','--no-fund'])
+              run('dependency-tree',['npm','ls','--all','--json'])
+              checks=[('lint',['npm','run','lint']),('typecheck',['npm','run','type-check']),('build',['npm','run','build']),('test',['npm','test'])]
+              failures=[]
+              for name,args in checks:
+                  try: run(name,args)
+                  except RuntimeError: failures.append(name)
+              run('diff',['git','diff','--','package.json','package-lock.json'])
+              after=tracked(); save('tracked-after.json',after)
+              changed=[n for n in before if before[n]!=after.get(n)]
+              summary['changed_tracked_files']=changed
+              if set(changed)-{'package.json','package-lock.json'}: raise RuntimeError('source drift')
+              for name in ['package.json','package-lock.json']:
+                  if pathlib.Path(name).read_bytes()!=(out/('candidate-'+name)).read_bytes(): raise RuntimeError('candidate changed during checks')
+              summary['failed_checks']=failures
+              summary['passed']=not failures and summary['candidate_full']['total']==0 and summary['candidate_production']['total']==0
+          except Exception as e:
+              summary['error']=type(e).__name__+': '+str(e)
+          finally:
+              save('summary.json',summary)
+              save('files.sha256.json',{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file() and p.name!='files.sha256.json'})
+          print(json.dumps(summary,indent=2))
+          raise SystemExit(0 if summary['passed'] else 1)
+          PY
+      - name: Retain reports even when candidate fails
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: minimatch-${{ matrix.variant }}
+          path: ${{ runner.temp }}/minimatch-report/
+          if-no-files-found: error
+          retention-days: 14
