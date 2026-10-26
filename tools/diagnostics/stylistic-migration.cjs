@@ -138,7 +138,7 @@ try {
   let config = fs.readFileSync(path.join(subject, 'eslint.config.cjs'), 'utf8');
   config = once(config, "const globals = require('globals');", "const globals = require('globals');\nconst stylisticModule = require('@stylistic/eslint-plugin');\nconst stylistic = stylisticModule.default ?? stylisticModule;");
   config = once(config, "plugins: { '@typescript-eslint': plugin },", "plugins: { '@typescript-eslint': plugin, '@stylistic': stylistic },");
-  config = once(config, "      // These were enabled by the legacy recommended preset. Preserve policy.\n      // The two stylistic core rules still work in v10 but need replacement before v11.\n      'no-extra-semi': 'error',\n      'no-mixed-spaces-and-tabs': 'error',", "      // Maintained equivalents; the legacy behavior is frozen in regression fixtures.\n      '@stylistic/no-extra-semi': 'error',\n      '@stylistic/no-mixed-spaces-and-tabs': 'error',");
+  config = once(config, "      // These were enabled by the legacy recommended preset. Preserve policy.\n      // The two stylistic core rules still work in v10 but need replacement before v11.\n      'no-extra-semi': 'error',\n      'no-mixed-spaces-and-tabs': 'error',", "      // Maintained equivalents; the legacy behavior is frozen in regression fixtures.\n      '@stylistic/no-extra-semi': 'error',\n      // false preserves the legacy default: smart-tabs remains disabled.\n      '@stylistic/no-mixed-spaces-and-tabs': ['error', false],");
   fs.writeFileSync(path.join(subject, 'eslint.config.cjs'), config);
   command('candidate-probe', ['node', '.style-probe.cjs', 'stylistic', path.join(out, 'cases.json'), path.join(out, 'candidate.json')]);
   const before = JSON.parse(fs.readFileSync(path.join(out, 'baseline.json')));
@@ -153,7 +153,12 @@ try {
     const activeBefore = Object.entries(rules).filter(([,v]) => severity(v) !== 0);
     const activeAfter = Object.entries(got).filter(([,v]) => severity(v) !== 0);
     assert.equal(activeAfter.length, activeBefore.length);
-    for (const [id, options] of activeBefore) assert.deepEqual(got[aliases[id] || id], options, file + ':' + id);
+    for (const [id, options] of activeBefore) {
+      // The core rule's omitted option means false; the maintained rule exposes
+      // defaultOptions:[false]. No smart-tabs or permissive mode is introduced.
+      const expected = id === 'no-mixed-spaces-and-tabs' && options.length === 1 ? [options[0], false] : options;
+      assert.deepEqual(got[aliases[id] || id], expected, file + ':' + id);
+    }
   }
   let guard = fs.readFileSync(path.join(subject, 'test/lint-policy.test.cjs'), 'utf8');
   guard = once(guard, "const eslint = new ESLint({ cwd: root });", "const eslint = new ESLint({ cwd: root });\n// Only these two names migrate; the frozen 66-rule baseline is unchanged.\nconst aliases = Object.freeze({ 'no-extra-semi': '@stylistic/no-extra-semi', 'no-mixed-spaces-and-tabs': '@stylistic/no-mixed-spaces-and-tabs' });");
@@ -190,7 +195,8 @@ test('style migration preserves a fixed legacy corpus and removes active depreca
     const cfg = await eslint.calculateConfigForFile(r.filePath);
     for (const id of baseline.rules) {
       assert.ok(!cfg.rules[id] || cfg.rules[id][0] === 0, 'Old rule is still active');
-      assert.deepEqual(cfg.rules['@stylistic/' + id], [2], 'Severity/options drift');
+      const expected = id === 'no-mixed-spaces-and-tabs' ? [2, false] : [2];
+      assert.deepEqual(cfg.rules['@stylistic/' + id], expected, 'Severity/options drift');
     }
   }
   for (const id of baseline.rules) {
@@ -237,6 +243,7 @@ for (const item of baseline.cases) {
     compiledFileCount: Object.keys(compiledBefore).length, compiledHashes: compiledBefore,
     activeRules: Object.values(before.configurations)[0] && Object.values(Object.values(before.configurations)[0]).filter(r => severity(r) !== 0).length,
     deprecatedBefore: before.deprecated, deprecatedAfter: after.deprecated,
+    optionNormalization: 'Only no-mixed-spaces-and-tabs omitted legacy option is expanded to explicit false, matching both upstream implementations; all other active options compare exactly.',
     contentChecks: { sourceUnchanged: true, productionLockUnchanged: true, compiledUnchanged: true, originalFixturesUnchanged: true },
     limits: 'First-party Linux CI; 24 bounded fixtures, not all-input semantic equivalence, security certification or independent VCP reproduction.' };
   writeJSON(path.join(out, 'summary.json'), report);
