@@ -1,0 +1,540 @@
+{
+  "sourceCommit": "8120059b7f2afce0373ee01311c2e75657699f4c",
+  "eslintVersion": "10.13.0",
+  "rules": [
+    "no-extra-semi",
+    "no-mixed-spaces-and-tabs"
+  ],
+  "cases": [
+    {
+      "name": "typed-statement",
+      "code": "export const n: number = 1;\n",
+      "rule": "no-extra-semi",
+      "messages": [],
+      "fixedCode": "export const n: number = 1;\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "extra-statement",
+      "code": "export const n: number = 1;;\n",
+      "rule": "no-extra-semi",
+      "messages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 28,
+          "endLine": 1,
+          "endColumn": 29,
+          "fix": {
+            "range": [
+              26,
+              28
+            ],
+            "text": ";"
+          }
+        }
+      ],
+      "fixedCode": "export const n: number = 1;\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "function-normal",
+      "code": "export function f() {}\n",
+      "rule": "no-extra-semi",
+      "messages": [],
+      "fixedCode": "export function f() {}\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "function-extra",
+      "code": "export function f() {};\n",
+      "rule": "no-extra-semi",
+      "messages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 23,
+          "endLine": 1,
+          "endColumn": 24,
+          "fix": {
+            "range": [
+              21,
+              23
+            ],
+            "text": "}"
+          }
+        }
+      ],
+      "fixedCode": "export function f() {}\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "class-normal",
+      "code": "export class C { value: number = 1; method() {} }\n",
+      "rule": "no-extra-semi",
+      "messages": [],
+      "fixedCode": "export class C { value: number = 1; method() {} }\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "class-extra",
+      "code": "export class C { value: number = 1;; method() {}; }\n",
+      "rule": "no-extra-semi",
+      "messages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 36,
+          "endLine": 1,
+          "endColumn": 37,
+          "fix": {
+            "range": [
+              34,
+              43
+            ],
+            "text": "; method"
+          }
+        },
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 49,
+          "endLine": 1,
+          "endColumn": 50,
+          "fix": {
+            "range": [
+              47,
+              51
+            ],
+            "text": "} }"
+          }
+        }
+      ],
+      "fixedCode": "export class C { value: number = 1; method() {} }\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "empty-for-body",
+      "code": "for (let i = 0; i < 1; i++);\n",
+      "rule": "no-extra-semi",
+      "messages": [],
+      "fixedCode": "for (let i = 0; i < 1; i++);\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "empty-while-body",
+      "code": "while (false);\n",
+      "rule": "no-extra-semi",
+      "messages": [],
+      "fixedCode": "while (false);\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "empty-if-body",
+      "code": "if (false);\n",
+      "rule": "no-extra-semi",
+      "messages": [],
+      "fixedCode": "if (false);\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "directive-fix-safety",
+      "code": ";\"use strict\"; export const n = 1;\n",
+      "rule": "no-extra-semi",
+      "messages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 1,
+          "endLine": 1,
+          "endColumn": 2,
+          "fix": null
+        }
+      ],
+      "fixedCode": ";\"use strict\"; export const n = 1;\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 1,
+          "endLine": 1,
+          "endColumn": 2,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "multiple-extra",
+      "code": "export const n = 1;;;\n",
+      "rule": "no-extra-semi",
+      "messages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 20,
+          "endLine": 1,
+          "endColumn": 21,
+          "fix": {
+            "range": [
+              18,
+              21
+            ],
+            "text": ";;"
+          }
+        },
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 21,
+          "endLine": 1,
+          "endColumn": 22,
+          "fix": {
+            "range": [
+              19,
+              21
+            ],
+            "text": ";"
+          }
+        }
+      ],
+      "fixedCode": "export const n = 1;\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "comment-extra",
+      "code": "export const n = 1; /* retained comment */ ;\n",
+      "rule": "no-extra-semi",
+      "messages": [
+        {
+          "ruleId": "no-extra-semi",
+          "severity": 2,
+          "messageId": "unexpected",
+          "message": "Unnecessary semicolon.",
+          "line": 1,
+          "column": 44,
+          "endLine": 1,
+          "endColumn": 45,
+          "fix": {
+            "range": [
+              18,
+              44
+            ],
+            "text": "; /* retained comment */ "
+          }
+        }
+      ],
+      "fixedCode": "export const n = 1; /* retained comment */ \n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "spaces-only",
+      "code": "export function f() {\n    return 1;\n}\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [],
+      "fixedCode": "export function f() {\n    return 1;\n}\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "tabs-only",
+      "code": "export function f() {\n\treturn 1;\n}\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [],
+      "fixedCode": "export function f() {\n\treturn 1;\n}\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "space-tab",
+      "code": "export function f() {\n \treturn 1;\n}\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        }
+      ],
+      "fixedCode": "export function f() {\n \treturn 1;\n}\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "tab-space",
+      "code": "export function f() {\n\t return 1;\n}\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        }
+      ],
+      "fixedCode": "export function f() {\n\t return 1;\n}\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "nested-mixed",
+      "code": "export function f() {\n  if (true) {\n  \t return 1;\n  }\n}\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 3,
+          "column": 2,
+          "endLine": 3,
+          "endColumn": 4,
+          "fix": null
+        }
+      ],
+      "fixedCode": "export function f() {\n  if (true) {\n  \t return 1;\n  }\n}\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 3,
+          "column": 2,
+          "endLine": 3,
+          "endColumn": 4,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "mixed-blank-line",
+      "code": " \t\nexport const n = 1;\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 1,
+          "column": 1,
+          "endLine": 1,
+          "endColumn": 3,
+          "fix": null
+        }
+      ],
+      "fixedCode": " \t\nexport const n = 1;\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 1,
+          "column": 1,
+          "endLine": 1,
+          "endColumn": 3,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "mixed-line-comment",
+      "code": " \t// comment\nexport const n = 1;\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 1,
+          "column": 1,
+          "endLine": 1,
+          "endColumn": 3,
+          "fix": null
+        }
+      ],
+      "fixedCode": " \t// comment\nexport const n = 1;\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 1,
+          "column": 1,
+          "endLine": 1,
+          "endColumn": 3,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "mixed-block-comment",
+      "code": "/*\n \t comment\n*/\nexport const n = 1;\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [],
+      "fixedCode": "/*\n \t comment\n*/\nexport const n = 1;\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "template-literal-content",
+      "code": "export const s = `line\n \tcontent`;\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [],
+      "fixedCode": "export const s = `line\n \tcontent`;\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "mixed-crlf",
+      "code": "export function f() {\r\n \treturn 1;\r\n}\r\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        }
+      ],
+      "fixedCode": "export function f() {\r\n \treturn 1;\r\n}\r\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        }
+      ]
+    },
+    {
+      "name": "string-tab-content",
+      "code": "export const s = \" \tcontent\";\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [],
+      "fixedCode": "export const s = \" \tcontent\";\n",
+      "afterFixMessages": []
+    },
+    {
+      "name": "multiple-mixed-lines",
+      "code": "export function f() {\n \tconst n = 1;\n\t return n;\n}\n",
+      "rule": "no-mixed-spaces-and-tabs",
+      "messages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        },
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 3,
+          "column": 1,
+          "endLine": 3,
+          "endColumn": 3,
+          "fix": null
+        }
+      ],
+      "fixedCode": "export function f() {\n \tconst n = 1;\n\t return n;\n}\n",
+      "afterFixMessages": [
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 2,
+          "column": 1,
+          "endLine": 2,
+          "endColumn": 3,
+          "fix": null
+        },
+        {
+          "ruleId": "no-mixed-spaces-and-tabs",
+          "severity": 2,
+          "messageId": "mixedSpacesAndTabs",
+          "message": "Mixed spaces and tabs.",
+          "line": 3,
+          "column": 1,
+          "endLine": 3,
+          "endColumn": 3,
+          "fix": null
+        }
+      ]
+    }
+  ]
+}

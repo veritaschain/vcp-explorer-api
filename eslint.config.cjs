@@ -3,6 +3,8 @@ const js = require('@eslint/js');
 const plugin = require('@typescript-eslint/eslint-plugin');
 const parser = require('@typescript-eslint/parser');
 const globals = require('globals');
+const stylisticModule = require('@stylistic/eslint-plugin');
+const stylistic = stylisticModule.default ?? stylisticModule;
 module.exports = [
   { ignores: ['dist/**', 'node_modules/**'] },
   {
@@ -13,16 +15,16 @@ module.exports = [
       parser,
       globals: { ...globals.node, ...globals.es2022 },
     },
-    plugins: { '@typescript-eslint': plugin },
+    plugins: { '@typescript-eslint': plugin, '@stylistic': stylistic },
     rules: {
       ...js.configs.recommended.rules,
       ...plugin.configs['eslint-recommended'].overrides[0].rules,
       ...plugin.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      // These were enabled by the legacy recommended preset. Preserve policy.
-      // The two stylistic core rules still work in v10 but need replacement before v11.
-      'no-extra-semi': 'error',
-      'no-mixed-spaces-and-tabs': 'error',
+      // Maintained equivalents; the legacy behavior is frozen in regression fixtures.
+      '@stylistic/no-extra-semi': 'error',
+      // false preserves the legacy default: smart-tabs remains disabled.
+      '@stylistic/no-mixed-spaces-and-tabs': ['error', false],
       'no-inner-declarations': ['error', 'functions', { blockScopedFunctions: 'disallow' }],
       'no-constant-condition': ['error', { checkLoops: 'all' }],
     },
