@@ -9,6 +9,17 @@ import { EventSearchParams } from '../types';
 const router = Router();
 const dataSource = new EventsDataSource();
 
+// undefined means absent (use the existing default); null means invalid.
+// Never coerce arrays/objects, partially parse a string, or round unsafe integers.
+function parsePaginationInteger(value: unknown, minimum: number): number | undefined | null {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length === 0 || /[^0-9]/.test(value)) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= minimum ? parsed : null;
+}
+
 /**
  * GET /v1/events/recent
  * 最近のイベント一覧を取得（後方互換性）
@@ -16,15 +27,15 @@ const dataSource = new EventsDataSource();
  */
 router.get('/recent', async (req, res) => {
   try {
-    const limitParam = req.query.limit as string;
-    const limit = Math.min(parseInt(limitParam) || 10, 100);
-
-    if (isNaN(limit) || limit < 1) {
+    const parsedLimit = parsePaginationInteger(req.query.limit, 1);
+    if (parsedLimit === null) {
       return res.status(400).json({
         error: 'invalid_parameter',
-        message: 'Limit must be a number between 1 and 100'
+        message: 'Limit must be a single unsigned decimal safe integer greater than zero'
       });
     }
+    // Preserve the existing default and cap for valid, explicitly supplied integers.
+    const limit = Math.min(parsedLimit ?? 10, 100);
 
     const events = await dataSource.getRecentEvents(limit);
     return res.json({ events });
@@ -44,6 +55,16 @@ router.get('/recent', async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
+    const limit = parsePaginationInteger(req.query.limit, 1);
+    const offset = parsePaginationInteger(req.query.offset, 0);
+    if (limit === null || offset === null) {
+      return res.status(400).json({
+        error: 'invalid_parameter',
+        message: limit === null
+          ? 'Limit must be a single unsigned decimal safe integer greater than zero'
+          : 'Offset must be a single unsigned decimal safe integer greater than or equal to zero'
+      });
+    }
     const params: EventSearchParams = {
       trace_id: req.query.trace_id as string,
       symbol: req.query.symbol as string,
@@ -52,8 +73,8 @@ router.get('/', async (req, res) => {
       end_time: req.query.end_time as string,
       algo_id: req.query.algo_id as string,
       venue_id: req.query.venue_id as string,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-      offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      limit,
+      offset
     };
 
     // Remove undefined params
