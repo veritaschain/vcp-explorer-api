@@ -76,8 +76,14 @@ paths:
         rejected with HTTP 400. Unknown event types are rejected.
         The algorithm filter matches only detailed mock VCP-GOV algo_id
         fixtures. Summaries with no matching detail are not included.
-        Time-window filtering currently uses JavaScript Date (millisecond
-        precision), so exact nanosecond boundaries are not established.
+        Time windows are inclusive and compared to the original event
+        summary timestamps at exact nanosecond granularity. Query bounds
+        must be valid RFC3339 Gregorian dates with a four-digit year,
+        uppercase T and Z or an explicit numeric timezone offset, and
+        optional 1-9 fractional digits; leap seconds are not supported.
+        Invalid or reversed bounds return HTTP 400 before data access.
+        The original timestamp strings are not rewritten. This is mock
+        summary filtering, not a clock-accuracy or signed-proof claim.
         The total field counts only records on the returned page.
       operationId: searchEvents
       parameters:
@@ -101,14 +107,14 @@ paths:
             $ref: '#/components/schemas/EventType'
         - name: start_time
           in: query
-          description: Start of time range (ISO8601)
+          description: Inclusive RFC3339 lower bound (UTC Z or numeric offset, 1-9 fractional digits permitted; no leap seconds)
           schema:
             type: string
             format: date-time
           example: "2025-11-24T00:00:00Z"
         - name: end_time
           in: query
-          description: End of time range (ISO8601)
+          description: Inclusive RFC3339 upper bound (UTC Z or numeric offset, 1-9 fractional digits permitted; must not precede start_time)
           schema:
             type: string
             format: date-time
