@@ -1,0 +1,97 @@
+name: Compare and stage ESLint 10 migration (temporary)
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  compare:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 3493f1ad9e5b1b87e2e46c75aec02a599fae880b
+          path: subject
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.1'
+      - name: Check diagnostic syntax and compare pinned baseline to supported tooling
+        run: |
+          node --check tools/diagnostics/eslint10-migration.cjs
+          node tools/diagnostics/eslint10-migration.cjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: eslint10-migration-evidence
+          path: migration-evidence/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: eslint10-migration-candidate
+          path: migration-candidate/
+          if-no-files-found: error
+          retention-days: 14
+  stage-only:
+    needs: compare
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 3493f1ad9e5b1b87e2e46c75aec02a599fae880b
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: eslint10-migration-candidate
+          path: candidate
+      - name: Validate exact candidate paths and hashes without executing candidate code
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('candidate')
+          m=json.loads((root/'manifest.json').read_text())
+          assert m['baselineCommit']=='3493f1ad9e5b1b87e2e46c75aec02a599fae880b'
+          assert m['validationStatus']=='passed'
+          expected={'package.json','package-lock.json','eslint.config.cjs','test/fixtures/lint-policy-baseline.json','test/lint-policy.test.cjs'}
+          assert set(m['files'])==expected
+          assert set(m['deleted'])=={'.eslintrc.cjs'}
+          actual={}
+          for p in (root/'files').rglob('*'):
+              assert not p.is_symlink()
+              if p.is_file(): actual[str(p.relative_to(root/'files'))]=hashlib.sha256(p.read_bytes()).hexdigest()
+          assert actual==m['files']
+          assert hashlib.sha256(pathlib.Path('.eslintrc.cjs').read_bytes()).hexdigest()==m['deleted']['.eslintrc.cjs']
+          for p in expected-{'package.json','package-lock.json'}: assert not pathlib.Path(p).exists()
+          old=json.loads(pathlib.Path('package.json').read_text())
+          new=json.loads((root/'files/package.json').read_text())
+          assert old['dependencies']==new['dependencies']
+          assert old['engines']==new['engines']
+          print(json.dumps(m,indent=2))
+          PY
+          test "$(git rev-parse HEAD)" = '3493f1ad9e5b1b87e2e46c75aec02a599fae880b'
+          test "$(git ls-remote origin refs/heads/main | awk '{print $1}')" = '3493f1ad9e5b1b87e2e46c75aec02a599fae880b'
+          if git ls-remote --exit-code --heads origin refs/heads/fix/eslint10-policy-20261026; then
+            echo 'Refuse existing candidate branch overwrite'; exit 1
+          fi
+          git checkout -b fix/eslint10-policy-20261026
+          cp -r candidate/files/. .
+          git rm .eslintrc.cjs
+          git add package.json package-lock.json eslint.config.cjs test/fixtures/lint-policy-baseline.json test/lint-policy.test.cjs
+          python3 - <<'PY'
+          import subprocess,json,pathlib
+          m=json.loads(pathlib.Path('candidate/manifest.json').read_text())
+          actual=set(subprocess.check_output(['git','diff','--cached','--name-only']).decode().splitlines())
+          assert actual==set(m['files'])|set(m['deleted']),actual
+          PY
+          git -c user.name='VeritasChain Standards Organization (VSO)' -c user.email='info@veritaschain.org' commit -m 'chore: migrate API lint tooling to ESLint 10 with policy regression guards'
+          git push origin HEAD:refs/heads/fix/eslint10-policy-20261026
