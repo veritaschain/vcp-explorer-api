@@ -55,7 +55,19 @@ jobs:
         run: npm run build
 
       - name: Test compiled API
+        env:
+          DEV_INSTALL_EVIDENCE: ${{ github.workspace }}/validation-evidence/install-dev
         run: npm test
+
+      - name: Upload installation and development evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: install-dev-evidence
+          path: validation-evidence/install-dev/
+          retention-days: 14
+          archive: true
+          if-no-files-found: warn
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
