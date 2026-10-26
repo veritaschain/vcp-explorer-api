@@ -11,14 +11,15 @@ info:
     below describe intended capabilities beyond the implementation. See README.md
     for actual filters, response differences, and verification limitations.
     
-    Production-ready API with cryptographic verification, advanced search, 
-    and full VCP Specification v1.0 compliance.
+    Demo API returning mock data, with proof and certificate fixtures and search.
+    Targets the VCP Specification v1.0 format (superseded by v1.2); conformance
+    has not been established.
     
     ## Features
-    - RFC 6962 compliant Merkle Proof verification
+    - Merkle proof fixtures (no server-side verification)
     - VCP module structure (TRADE/RISK/GOV)
     - Advanced search with TraceID support
-    - Event certificates for regulatory compliance
+    - Event certificate JSON assembled from fixtures (not a compliance finding)
     - Fixed event type codes per VCP Spec v1.0
     
   contact:
@@ -43,7 +44,7 @@ tags:
   - name: Verification
     description: Merkle proof and certificate generation
   - name: Entities
-    description: VC-Certified organizations
+    description: Mock/demo organisations (not a certification registry)
 
 paths:
   /system/status:
@@ -293,7 +294,7 @@ paths:
       tags:
         - Entities
       summary: Get certified entities
-      description: Returns list of VC-Certified organizations
+      description: Returns mock/demo organisations. Not a certification registry; VSO does not issue certifications itself.
       operationId: getCertifiedEntities
       responses:
         '200':

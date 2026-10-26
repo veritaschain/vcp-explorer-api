@@ -1,5 +1,11 @@
 # VCP Explorer API
 
+> **Status correction — 25 October 2026**
+>
+> - This is first-party code by VeritasChain Co., Ltd., which operates the VeritasChain Standards Organization (VSO). Its fixtures and integration documents target VCP v1.0 / v1.1; both are superseded by VCP v1.2 (Released, tag `v1.2.0`).
+> - Conformance to any VCP tier, or to VAP, has not been independently established. There are zero external implementations of VAP or any of its profiles, including VCP.
+> - Not certified, and no certification registry is behind `/v1/certified/entities`: it returns mock/demo organisations. VSO does not issue certifications itself. The certification scheme requires a Conformity Assessment Body (CAB) independent of the scheme owner; the only registered CAB, VeritasChain Co., Ltd., is not independent (VAP v1.2 ERRATA E-2026-10-21).
+
 [![Package version](https://img.shields.io/badge/API_package-1.1.0-blue.svg)](package.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 
@@ -192,11 +198,10 @@ API package versions, URL versions, and protocol versions are separate:
 | Bundled certificate metadata | `system.vcp_version: "1.0"` (mock data) |
 | Canonical VCP specification | [veritaschain/vcp-spec](https://github.com/veritaschain/vcp-spec), authoritative files under [`spec/`](https://github.com/veritaschain/vcp-spec/tree/main/spec) |
 
-**Canonical status checked on 2026-10-08 (JST):** the canonical README identifies
-v1.2 as current and labels its specification text "Production Ready (GA)".
-[The GA cutover PR #1](https://github.com/veritaschain/vcp-spec/pull/1) is merged,
-but its required `v1.2.0` tag was not present when checked. This README therefore
-does not assert that the tagged GA release process is complete.
+**Canonical status checked on 2026-10-25 (JST):** VCP v1.2 is Released. The
+`v1.2.0` tag now exists in [veritaschain/vcp-spec](https://github.com/veritaschain/vcp-spec)
+and points to commit `b23acb2`. (When this section was first written on 2026-10-08,
+the tag was not yet present.)
 
 See the [canonical v1.2 documents and status](https://github.com/veritaschain/vcp-spec/tree/main/spec/v1.2)
 for updates. A specification status does not establish this API's conformance;
