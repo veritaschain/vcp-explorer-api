@@ -1,0 +1,110 @@
+name: Compare maintained style rules (temporary)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  compare:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 8120059b7f2afce0373ee01311c2e75657699f4c
+          path: subject
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: subject/.nvmrc
+          package-manager-cache: false
+      - name: Check syntax and compare a clean baseline with maintained equivalents
+        run: |
+          node --check tools/diagnostics/stylistic-migration.cjs
+          node tools/diagnostics/stylistic-migration.cjs
+      - name: Preserve complete first-party comparison evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stylistic-migration-evidence
+          path: stylistic-evidence/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Retain successful candidate files
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stylistic-migration-candidate
+          path: stylistic-candidate/
+          retention-days: 14
+          if-no-files-found: error
+
+  stage-only:
+    needs: compare
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 8120059b7f2afce0373ee01311c2e75657699f4c
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: stylistic-migration-candidate
+          path: candidate
+      - name: Verify exact files then create a separate review branch without running candidate code
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, shutil
+          root = pathlib.Path('candidate')
+          m = json.loads((root / 'manifest.json').read_text())
+          expected = {'package.json','package-lock.json','eslint.config.cjs','test/lint-policy.test.cjs','test/fixtures/style-rule-baseline.json','test/style-rule-policy.test.cjs'}
+          assert m['baseline'] == '8120059b7f2afce0373ee01311c2e75657699f4c'
+          assert m['report']['status'] == 'PASSED'
+          assert m['report']['fixtureCount'] == 24
+          assert m['report']['deprecatedAfter'] == []
+          assert set(m['fileHashes']) == expected
+          actual = {}
+          for f in root.rglob('*'):
+              assert not f.is_symlink(), f
+              if f.is_file() and f.name != 'manifest.json':
+                  actual[str(f.relative_to(root))] = hashlib.sha256(f.read_bytes()).hexdigest()
+          assert actual == m['fileHashes']
+          old = json.loads(pathlib.Path('package-lock.json').read_text())
+          new = json.loads((root / 'package-lock.json').read_text())
+          prod = lambda l: {p:v for p,v in l['packages'].items() if p and not v.get('dev',False)}
+          assert prod(old) == prod(new)
+          before = json.loads(pathlib.Path('package.json').read_text())
+          after = json.loads((root / 'package.json').read_text())
+          before['devDependencies']['@stylistic/eslint-plugin'] = '5.10.0'
+          assert before == after
+          for p in sorted(expected):
+              target = pathlib.Path(p)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(root / p, target)
+          print(json.dumps({'verified_file_hashes': actual, 'report': m['report']}, indent=2))
+          PY
+          test "$(git rev-parse HEAD)" = '8120059b7f2afce0373ee01311c2e75657699f4c'
+          test "$(git ls-remote origin refs/heads/main | awk '{print $1}')" = '8120059b7f2afce0373ee01311c2e75657699f4c'
+          if git ls-remote --exit-code --heads origin refs/heads/fix/stylistic-rules-20261026; then
+            echo 'Existing candidate branch: refuse overwrite'; exit 1
+          fi
+          git switch -c fix/stylistic-rules-20261026
+          git add package.json package-lock.json eslint.config.cjs test/lint-policy.test.cjs test/fixtures/style-rule-baseline.json test/style-rule-policy.test.cjs
+          python3 - <<'PY'
+          import subprocess
+          expected = {'package.json','package-lock.json','eslint.config.cjs','test/lint-policy.test.cjs','test/fixtures/style-rule-baseline.json','test/style-rule-policy.test.cjs'}
+          paths = set(subprocess.check_output(['git','diff','--cached','--name-only']).decode().splitlines())
+          assert paths == expected, paths
+          PY
+          git -c user.name='VeritasChain Standards Organization (VSO)' -c user.email='info@veritaschain.org' commit -m 'chore(api): migrate legacy style rules with frozen parity regressions'
+          git push origin HEAD:refs/heads/fix/stylistic-rules-20261026
+          echo 'REVIEW BRANCH ONLY; MAIN UNCHANGED'
