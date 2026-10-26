@@ -1,7 +1,7 @@
 {
   "name": "vcp-explorer-api",
   "version": "1.1.0",
-  "description": "VCP Explorer API v1.1 - Production-ready with Merkle Proof verification, VCP module structure, and advanced search",
+  "description": "Reference HTTP API for browsing VeritasChain Protocol (VCP) demo events and proof fixtures; no server-side cryptographic verification.",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
