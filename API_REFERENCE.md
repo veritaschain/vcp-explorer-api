@@ -95,8 +95,8 @@ GET /v1/events
 | `trace_id` | UUID v7 | No | Transaction trace ID (tracks SIG→ORD→ACK→EXE chain) | `01934e3a-6a1b-7c82-9d1b-0987654321dc` |
 | `symbol` | String | No | Trading symbol | `XAUUSD`, `EURUSD`, `BTCUSDT` |
 | `event_type` | String | No | Event type name (see Event Types table) | `ORD`, `EXE`, `REJ` |
-| `start_time` | ISO8601 | No | Start of time range (inclusive) | `2025-11-24T00:00:00Z` |
-| `end_time` | ISO8601 | No | End of time range (inclusive) | `2025-11-24T23:59:59Z` |
+| `start_time` | RFC3339 | No | Inclusive start boundary, nanosecond-accurate (Z or numeric UTC offset) | `2025-11-24T00:00:00.123456789Z` |
+| `end_time` | RFC3339 | No | Inclusive end boundary, must be >= start_time | `2025-11-24T23:59:59Z` |
 | `algo_id` | String | No | Match VCP-GOV algorithm ID from available detailed mock event fixtures (unknown or missing IDs do not match) | `neural-scalper-v1.2` |
 | `venue_id` | String | No | Venue/broker/exchange identifier | `XNAS`, `BINANCE` |
 | `limit` | Integer | No | Maximum results (1-500, default: 50) | `100` |
@@ -109,10 +109,15 @@ The `algo_id` mock search joins summary records to available VCP-GOV detail
 fixtures by event ID; it does not infer missing algorithm identities.
 `event_type_code` remains a response field, **not** a supported search parameter.
 `total` counts only events **on the returned page**, not the entire matching
-population. Mock time-range filtering currently uses millisecond-resolution
-JavaScript Date and does not establish correctness at nanosecond boundaries;
-invalid/reversed time-range handling is tracked separately in
-[API Issue #19](https://github.com/veritaschain/vcp-explorer-api/issues/19).
+population. Mock time bounds use strict Gregorian RFC3339 timestamps with four-digit
+years, an explicit `Z` or numeric timezone offset, and optional 1–9 decimal
+fractional digits. Seconds are limited to 00–59 (no leap seconds); invalid
+calendar dates and reversed time windows return `400 invalid_parameter` before
+data access. Bounds are **inclusive**, normalized with exact nanosecond integer
+arithmetic, and compared against the original event-summary timestamp strings.
+The strings are neither rounded nor rewritten. This does **not** establish
+clock accuracy, consistency with unrelated mock detail `timestamp_int`
+fields, authenticity of recorded events or VCP conformance.
 
 **Event Types Reference:**
 

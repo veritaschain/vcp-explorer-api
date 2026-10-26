@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { EventsDataSource } from '../data/events';
 import { EventSearchParams, EVENT_TYPE_CODES } from '../types';
+import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
 const router = Router();
 const dataSource = new EventsDataSource();
@@ -89,6 +90,20 @@ router.get('/', async (req, res) => {
       return res.status(400).json({
         error: 'invalid_event_type',
         message: 'Unsupported event_type value'
+      });
+    }
+    // Parse dates precisely before querying. The existing scalar-shape guard
+    // above rejects arrays/objects; RFC3339 calendar and time ranges are
+    // checked here without lossy Date fractional parsing.
+    const startNs = typeof req.query.start_time === 'string'
+      ? parseMockSearchTimestampNs(req.query.start_time) : undefined;
+    const endNs = typeof req.query.end_time === 'string'
+      ? parseMockSearchTimestampNs(req.query.end_time) : undefined;
+    if (startNs === null || endNs === null ||
+        (startNs !== undefined && endNs !== undefined && startNs > endNs)) {
+      return res.status(400).json({
+        error: 'invalid_parameter',
+        message: 'Time range must contain valid ordered RFC3339 timestamps with at most 9 fractional digits'
       });
     }
     const params: EventSearchParams = {
