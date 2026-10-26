@@ -8,6 +8,8 @@ const { ESLint } = require('eslint');
 const policy = require('./fixtures/lint-policy-baseline.json');
 const root = path.resolve(__dirname, '..');
 const eslint = new ESLint({ cwd: root });
+// Only these two names migrate; the frozen 66-rule baseline is unchanged.
+const aliases = Object.freeze({ 'no-extra-semi': '@stylistic/no-extra-semi', 'no-mixed-spaces-and-tabs': '@stylistic/no-mixed-spaces-and-tabs' });
 const severity = value => {
   const n = Array.isArray(value) ? value[0] : value;
   return { off: 0, warn: 1, error: 2 }[n] ?? n;
@@ -29,7 +31,7 @@ test('lint policy covers every TypeScript source file and preserves baseline act
     const config = await eslint.calculateConfigForFile(file);
     assert.ok(config && config.languageOptions.parser, 'TypeScript parser required: ' + file);
     for (const [id, rule] of Object.entries(policy.activeRules)) {
-      assert.ok(severity(config.rules[id]) >= severity(rule), 'Rule removed or weakened: ' + id + ' in ' + file);
+      assert.ok(severity(config.rules[aliases[id] || id]) >= severity(rule), 'Rule removed or weakened: ' + id + ' in ' + file);
     }
     const unused = config.rules['@typescript-eslint/no-unused-vars'];
     assert.equal(severity(unused), 2);
@@ -43,6 +45,6 @@ for (const fixture of policy.cases) {
     const result = (await eslint.lintText(fixture.code, { filePath: path.join(root, 'src/__lint_policy_fixture.ts') }))[0];
     assert.equal(result.fatalErrorCount, 0);
     if (fixture.rule === null) assert.deepEqual(result.messages, []);
-    else assert.ok(result.messages.some(m => m.ruleId === fixture.rule && m.severity === 2), JSON.stringify(result.messages));
+    else assert.ok(result.messages.some(m => m.ruleId === (aliases[fixture.rule] || fixture.rule) && m.severity === 2), JSON.stringify(result.messages));
   });
 }
