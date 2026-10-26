@@ -71,13 +71,16 @@ const assert = require('node:assert/strict');
 const { ESLint } = require('eslint');
 const parser = require('@typescript-eslint/parser');
 const legacy = process.argv[2] === 'legacy';
-const plugin = legacy ? null : require('@stylistic/eslint-plugin').default;
+const loaded = legacy ? null : require('@stylistic/eslint-plugin');
+const plugin = loaded?.default ?? loaded;
+if (!legacy) assert.ok(plugin && plugin.rules['no-extra-semi'] && plugin.rules['no-mixed-spaces-and-tabs']);
 const cases = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'));
-const normalize = messages => messages.map(m => ({
+// Match the JSON snapshot representation; absent optional fields stay absent.
+const normalize = messages => JSON.parse(JSON.stringify(messages.map(m => ({
   ruleId: m.ruleId?.replace(/^@stylistic\//, ''), severity: m.severity,
   messageId: m.messageId, message: m.message, line: m.line, column: m.column,
   endLine: m.endLine, endColumn: m.endColumn, fix: m.fix || null,
-}));
+}))));
 (async () => {
   const data = [];
   for (const item of cases) {
@@ -133,7 +136,7 @@ try {
   const production = l => Object.fromEntries(Object.entries(l.packages).filter(([p, m]) => p && !m.dev));
   assert.deepEqual(production(lockAfter), production(lockBefore), 'Production dependencies must not drift');
   let config = fs.readFileSync(path.join(subject, 'eslint.config.cjs'), 'utf8');
-  config = once(config, "const globals = require('globals');", "const globals = require('globals');\nconst stylistic = require('@stylistic/eslint-plugin').default;");
+  config = once(config, "const globals = require('globals');", "const globals = require('globals');\nconst stylisticModule = require('@stylistic/eslint-plugin');\nconst stylistic = stylisticModule.default ?? stylisticModule;");
   config = once(config, "plugins: { '@typescript-eslint': plugin },", "plugins: { '@typescript-eslint': plugin, '@stylistic': stylistic },");
   config = once(config, "      // These were enabled by the legacy recommended preset. Preserve policy.\n      // The two stylistic core rules still work in v10 but need replacement before v11.\n      'no-extra-semi': 'error',\n      'no-mixed-spaces-and-tabs': 'error',", "      // Maintained equivalents; the legacy behavior is frozen in regression fixtures.\n      '@stylistic/no-extra-semi': 'error',\n      '@stylistic/no-mixed-spaces-and-tabs': 'error',");
   fs.writeFileSync(path.join(subject, 'eslint.config.cjs'), config);
@@ -167,13 +170,14 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { ESLint } = require('eslint');
 const parser = require('@typescript-eslint/parser');
-const stylistic = require('@stylistic/eslint-plugin').default;
+const stylisticModule = require('@stylistic/eslint-plugin');
+const stylistic = stylisticModule.default ?? stylisticModule;
 const baseline = require('./fixtures/style-rule-baseline.json');
-const normalize = messages => messages.map(m => ({
+const normalize = messages => JSON.parse(JSON.stringify(messages.map(m => ({
   ruleId: m.ruleId?.replace(/^@stylistic\//, ''), severity: m.severity,
   messageId: m.messageId, message: m.message, line: m.line, column: m.column,
   endLine: m.endLine, endColumn: m.endColumn, fix: m.fix || null,
-}));
+}))));
 test('style migration preserves a fixed legacy corpus and removes active deprecated rules', async () => {
   assert.equal(baseline.sourceCommit, '8120059b7f2afce0373ee01311c2e75657699f4c');
   assert.equal(baseline.cases.length, 24);
