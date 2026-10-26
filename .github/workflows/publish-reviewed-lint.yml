@@ -1,0 +1,61 @@
+name: Materialize reviewed lint dependency update (temporary)
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  materialize:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/minimatch-options-20261026'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Create a new branch from the exact reviewed artifact bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          """Create a new branch containing exactly two previously reviewed artifact files."""
+          import base64, hashlib, io, json, subprocess, zipfile
+          REPO='veritaschain/vcp-explorer-api'
+          BASE='32e36b2425e4a78b687463e97d82e432a7fe58cf'
+          BRANCH='fix/typescript-eslint-8-72-0-20261026'
+          
+          def api(path, body=None):
+              args=['gh','api','repos/'+REPO+'/'+path]
+              if body is not None: args += ['--method','POST','--input','-']
+              p=subprocess.run(args,input=json.dumps(body).encode() if body is not None else None,capture_output=True,timeout=60,check=True)
+              return json.loads(p.stdout)
+          
+          raw=subprocess.check_output(['gh','api','repos/'+REPO+'/actions/artifacts/12631745963/zip'],timeout=60)
+          assert len(raw)==96067
+          assert hashlib.sha256(raw).hexdigest()=='afd79cfd63898fa9023f813033591cbe9c26648ed9688e3070ccfb76bc65ce6b'
+          expected={
+           'package.json':('b554721d60f4266cc1025dbe58de49b4a89797a82df7b3e09c0e59d8feb8cb0e','26be774bde311c6d08220d6c379e0560a2fcacad'),
+           'package-lock.json':('b9b696ec96578c5bed115f21378c1424167f077a15cbbfabafde50a586bf3805','fac1c0229a461d9ec5eeb5c68bcc878ef32086ff')}
+          files={}
+          with zipfile.ZipFile(io.BytesIO(raw)) as z:
+              assert len(z.namelist())==len(set(z.namelist()))
+              assert sum(i.file_size for i in z.infolist())<32*1024*1024
+              assert z.testzip() is None
+              for path,(sha256,blob_sha) in expected.items():
+                  data=z.read('candidate-'+path)
+                  assert hashlib.sha256(data).hexdigest()==sha256
+                  assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==blob_sha
+                  json.loads(data); files[path]=data
+          assert api('git/ref/heads/main')['object']['sha']==BASE,'main moved; do not overwrite'
+          base=api('git/commits/'+BASE)
+          entries=[]
+          for path,data in files.items():
+              result=api('git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})
+              assert result['sha']==expected[path][1]
+              entries.append({'path':path,'mode':'100644','type':'blob','sha':result['sha']})
+          tree=api('git/trees',{'base_tree':base['tree']['sha'],'tree':entries})
+          commit=api('git/commits',{'message':'fix(deps): update typescript-eslint to 8.72.0 for minimatch advisories','tree':tree['sha'],'parents':[BASE]})
+          ref=api('git/refs',{'ref':'refs/heads/'+BRANCH,'sha':commit['sha']})
+          assert ref['object']['sha']==commit['sha']
+          print(json.dumps({'branch':BRANCH,'commit':commit['sha'],'tree':tree['sha'],'files':expected},indent=2))
+          PY
