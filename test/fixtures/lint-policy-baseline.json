@@ -1,0 +1,299 @@
+{
+  "sourceCommit": "3493f1ad9e5b1b87e2e46c75aec02a599fae880b",
+  "eslintVersion": "8.57.1",
+  "activeRules": {
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/ban-ts-comment": [
+      "error"
+    ],
+    "@typescript-eslint/no-array-constructor": [
+      "error"
+    ],
+    "@typescript-eslint/no-duplicate-enum-values": [
+      "error"
+    ],
+    "@typescript-eslint/no-empty-object-type": [
+      "error"
+    ],
+    "@typescript-eslint/no-explicit-any": [
+      "error"
+    ],
+    "@typescript-eslint/no-extra-non-null-assertion": [
+      "error"
+    ],
+    "@typescript-eslint/no-misused-new": [
+      "error"
+    ],
+    "@typescript-eslint/no-namespace": [
+      "error"
+    ],
+    "@typescript-eslint/no-non-null-asserted-optional-chain": [
+      "error"
+    ],
+    "@typescript-eslint/no-require-imports": [
+      "error"
+    ],
+    "@typescript-eslint/no-this-alias": [
+      "error"
+    ],
+    "@typescript-eslint/no-unnecessary-type-constraint": [
+      "error"
+    ],
+    "@typescript-eslint/no-unsafe-declaration-merging": [
+      "error"
+    ],
+    "@typescript-eslint/no-unsafe-function-type": [
+      "error"
+    ],
+    "@typescript-eslint/no-unused-expressions": [
+      "error"
+    ],
+    "@typescript-eslint/no-wrapper-object-types": [
+      "error"
+    ],
+    "@typescript-eslint/prefer-as-const": [
+      "error"
+    ],
+    "@typescript-eslint/prefer-namespace-keyword": [
+      "error"
+    ],
+    "@typescript-eslint/triple-slash-reference": [
+      "error"
+    ],
+    "no-var": [
+      "error"
+    ],
+    "prefer-const": [
+      "error"
+    ],
+    "prefer-rest-params": [
+      "error"
+    ],
+    "prefer-spread": [
+      "error"
+    ],
+    "for-direction": [
+      "error"
+    ],
+    "no-async-promise-executor": [
+      "error"
+    ],
+    "no-case-declarations": [
+      "error"
+    ],
+    "no-compare-neg-zero": [
+      "error"
+    ],
+    "no-cond-assign": [
+      "error"
+    ],
+    "no-constant-condition": [
+      "error"
+    ],
+    "no-control-regex": [
+      "error"
+    ],
+    "no-debugger": [
+      "error"
+    ],
+    "no-delete-var": [
+      "error"
+    ],
+    "no-dupe-else-if": [
+      "error"
+    ],
+    "no-duplicate-case": [
+      "error"
+    ],
+    "no-empty": [
+      "error"
+    ],
+    "no-empty-character-class": [
+      "error"
+    ],
+    "no-empty-pattern": [
+      "error"
+    ],
+    "no-ex-assign": [
+      "error"
+    ],
+    "no-extra-boolean-cast": [
+      "error"
+    ],
+    "no-extra-semi": [
+      "error"
+    ],
+    "no-fallthrough": [
+      "error"
+    ],
+    "no-global-assign": [
+      "error"
+    ],
+    "no-inner-declarations": [
+      "error"
+    ],
+    "no-invalid-regexp": [
+      "error"
+    ],
+    "no-irregular-whitespace": [
+      "error"
+    ],
+    "no-loss-of-precision": [
+      "error"
+    ],
+    "no-misleading-character-class": [
+      "error"
+    ],
+    "no-mixed-spaces-and-tabs": [
+      "error"
+    ],
+    "no-nonoctal-decimal-escape": [
+      "error"
+    ],
+    "no-octal": [
+      "error"
+    ],
+    "no-prototype-builtins": [
+      "error"
+    ],
+    "no-regex-spaces": [
+      "error"
+    ],
+    "no-self-assign": [
+      "error"
+    ],
+    "no-shadow-restricted-names": [
+      "error"
+    ],
+    "no-sparse-arrays": [
+      "error"
+    ],
+    "no-unexpected-multiline": [
+      "error"
+    ],
+    "no-unsafe-finally": [
+      "error"
+    ],
+    "no-unsafe-optional-chaining": [
+      "error"
+    ],
+    "no-unused-labels": [
+      "error"
+    ],
+    "no-useless-backreference": [
+      "error"
+    ],
+    "no-useless-catch": [
+      "error"
+    ],
+    "no-useless-escape": [
+      "error"
+    ],
+    "require-yield": [
+      "error"
+    ],
+    "use-isnan": [
+      "error"
+    ],
+    "valid-typeof": [
+      "error"
+    ]
+  },
+  "cases": [
+    {
+      "name": "typed-export",
+      "code": "export const value: string = 'ok';",
+      "rule": null
+    },
+    {
+      "name": "underscore-argument-allowed",
+      "code": "export function f(_unused: string): number { return 1; }",
+      "rule": null
+    },
+    {
+      "name": "node-globals",
+      "code": "export const version = process.version; export const bytes = Buffer.from('x');",
+      "rule": null
+    },
+    {
+      "name": "type-only-export",
+      "code": "export type Name = string;",
+      "rule": null
+    },
+    {
+      "name": "unused-local",
+      "code": "const unused = 1; export {};",
+      "rule": "@typescript-eslint/no-unused-vars"
+    },
+    {
+      "name": "unused-argument",
+      "code": "export function f(unused: string) { return 1; }",
+      "rule": "@typescript-eslint/no-unused-vars"
+    },
+    {
+      "name": "underscore-local-not-exempt",
+      "code": "const _unused = 1; export {};",
+      "rule": "@typescript-eslint/no-unused-vars"
+    },
+    {
+      "name": "explicit-any",
+      "code": "export function f(value: any) { return value; }",
+      "rule": "@typescript-eslint/no-explicit-any"
+    },
+    {
+      "name": "debugger",
+      "code": "export function f() { debugger; return 1; }",
+      "rule": "no-debugger"
+    },
+    {
+      "name": "var-declaration",
+      "code": "export function f() { var value = 1; return value; }",
+      "rule": "no-var"
+    },
+    {
+      "name": "prefer-const",
+      "code": "export function f() { let value = 1; return value; }",
+      "rule": "prefer-const"
+    },
+    {
+      "name": "async-promise-executor",
+      "code": "export const p = new Promise(async resolve => { resolve(1); });",
+      "rule": "no-async-promise-executor"
+    },
+    {
+      "name": "unused-expression",
+      "code": "export {}; 1 + 2;",
+      "rule": "@typescript-eslint/no-unused-expressions"
+    },
+    {
+      "name": "ts-ignore-comment",
+      "code": "// @ts-ignore\nexport const value = 1;",
+      "rule": "@typescript-eslint/ban-ts-comment"
+    },
+    {
+      "name": "extra-semicolon",
+      "code": "export const value = 1;;",
+      "rule": "no-extra-semi"
+    },
+    {
+      "name": "mixed-indentation",
+      "code": "export function f() {\n \treturn 1;\n}",
+      "rule": "no-mixed-spaces-and-tabs"
+    },
+    {
+      "name": "nested-block-function",
+      "code": "export function f(flag: boolean) { if (flag) { function inner() { return 1; } return inner(); } return 0; }",
+      "rule": "no-inner-declarations"
+    },
+    {
+      "name": "constant-while-condition",
+      "code": "export function f() { while (true) { break; } }",
+      "rule": "no-constant-condition"
+    }
+  ]
+}
