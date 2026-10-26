@@ -22,6 +22,10 @@ const CASES = [
   { name: 'async-promise-executor', code: 'export const p = new Promise(async resolve => { resolve(1); });', rule: 'no-async-promise-executor' },
   { name: 'unused-expression', code: 'export {}; 1 + 2;', rule: '@typescript-eslint/no-unused-expressions' },
   { name: 'ts-ignore-comment', code: '// @ts-ignore\nexport const value = 1;', rule: '@typescript-eslint/ban-ts-comment' },
+  { name: 'extra-semicolon', code: 'export const value = 1;;', rule: 'no-extra-semi' },
+  { name: 'mixed-indentation', code: 'export function f() {\n \treturn 1;\n}', rule: 'no-mixed-spaces-and-tabs' },
+  { name: 'nested-block-function', code: 'export function f(flag: boolean) { if (flag) { function inner() { return 1; } return inner(); } return 0; }', rule: 'no-inner-declarations' },
+  { name: 'constant-while-condition', code: 'export function f() { while (true) { break; } }', rule: 'no-constant-condition' },
 ];
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 const writeJson = (p, v) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(v, null, 2) + '\n'); };
@@ -52,7 +56,9 @@ async function probe(root, output) {
     const ok = c.rule === null ? messages.length === 0 : messages.some(m => m.ruleId === c.rule && m.severity === 2);
     cases.push({ ...c, ok, messages });
   }
-  const result = { version: req('eslint/package.json').version, source, activeRules, config, cases,
+  const result = { version: req('eslint/package.json').version, source, activeRules,
+    config: { rules: config.rules, env: config.env || null, parser: config.parser || config.languageOptions?.parser?.meta || null, parserOptions: config.parserOptions || null, language: config.languageOptions ? { ecmaVersion:config.languageOptions.ecmaVersion, sourceType:config.languageOptions.sourceType, globals:config.languageOptions.globals } : null },
+    cases, deprecatedRules:[...new Set(linted.flatMap(r => (r.usedDeprecatedRules || []).map(x=>x.ruleId)))],
     sourceDiagnostics: linted.flatMap(r => r.messages.map(m => ({ file: path.relative(root, r.filePath), ...m }))) };
   writeJson(output, result);
   assert.ok(cases.every(c => c.ok), 'Policy fixture mismatch: ' + JSON.stringify(cases.filter(c => !c.ok)));
@@ -80,6 +86,12 @@ module.exports = [
       ...plugin.configs['eslint-recommended'].overrides[0].rules,
       ...plugin.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // These were enabled by the legacy recommended preset. Preserve policy.
+      // The two stylistic core rules still work in v10 but need replacement before v11.
+      'no-extra-semi': 'error',
+      'no-mixed-spaces-and-tabs': 'error',
+      'no-inner-declarations': ['error', 'functions', { blockScopedFunctions: 'disallow' }],
+      'no-constant-condition': ['error', { checkLoops: 'all' }],
     },
   },
 ];
@@ -109,7 +121,8 @@ test('lint policy covers every TypeScript source file and preserves baseline act
   assert.ok(source.length > 0);
   const results = await eslint.lintFiles(['src']);
   assert.deepEqual(results.map(r => r.filePath).sort(), source);
-  assert.ok(Object.keys(policy.activeRules).length >= 40, 'Baseline may not be empty or truncated');
+  assert.equal(Object.keys(policy.activeRules).length, 66, 'Fixed baseline must not be truncated');
+  assert.equal(policy.cases.length, 18, 'Fixed regression corpus must not be truncated');
   for (const file of source) {
     const config = await eslint.calculateConfigForFile(file);
     assert.ok(config && config.languageOptions.parser, 'TypeScript parser required: ' + file);
@@ -119,6 +132,8 @@ test('lint policy covers every TypeScript source file and preserves baseline act
     const unused = config.rules['@typescript-eslint/no-unused-vars'];
     assert.equal(severity(unused), 2);
     assert.equal(unused[1].argsIgnorePattern, '^_');
+    assert.equal(config.rules['no-inner-declarations'][2].blockScopedFunctions, 'disallow');
+    assert.equal(config.rules['no-constant-condition'][1].checkLoops, 'all');
   }
 });
 for (const fixture of policy.cases) {
@@ -196,7 +211,7 @@ function migrate() {
       assert.ok(level(after.activeRules[id]) >= level(rule), 'Removed/weakened rule: ' + id);
       preserved.push(id);
     }
-    summary.rules = { preservedActive: preserved.length, baselineActive: Object.keys(baseline.activeRules).length, candidateActive: Object.keys(after.activeRules).length, added: Object.keys(after.activeRules).filter(id => !(id in baseline.activeRules)), fileCoverage: after.source, baselineCases: baseline.cases.length, candidateCases: after.cases.length };
+    summary.rules = { preservedActive: preserved.length, baselineActive: Object.keys(baseline.activeRules).length, candidateActive: Object.keys(after.activeRules).length, added: Object.keys(after.activeRules).filter(id => !(id in baseline.activeRules)), fileCoverage: after.source, baselineCases: baseline.cases.length, candidateCases: after.cases.length, retainedDeprecatedCoreRules:after.deprecatedRules };
     const afterLock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json')));
     const runtime = lock => Object.fromEntries(Object.entries(lock.packages).filter(([name,p]) => name && !p.dev));
     assert.deepEqual(runtime(afterLock), runtime(beforeLock), 'Runtime lock entries changed');
