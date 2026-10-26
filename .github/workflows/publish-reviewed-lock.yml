@@ -1,0 +1,48 @@
+name: Materialize reviewed body-parser fix (temporary)
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/publish-reviewed-lock.yml']
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/explorer-dependencies-20261026' && github.event.pull_request.user.login == 'veritaschain'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: b4a5d304c9b111f354c40356b0453bf4a825d4d1
+          persist-credentials: true
+      - name: Reconstruct only the already audited three-line lock change
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, subprocess
+          p = pathlib.Path('package-lock.json')
+          data = p.read_bytes()
+          assert hashlib.sha256(data).hexdigest() == 'bba90eb9f8b18b38d757e6bd754c626c3049339fbb2e12ef81c73b9cca370475'
+          substitutions = [
+              (b'"version": "1.20.8"', b'"version": "1.20.9"'),
+              (b'https://registry.npmjs.org/body-parser/-/body-parser-1.20.8.tgz', b'https://registry.npmjs.org/body-parser/-/body-parser-1.20.9.tgz'),
+              (b'sha512-JNcyFQ64OiijEkPzUBTCe+hyPXUD/3LEldGQ6iF5LR1w00mx9o7xtDWHXBY2iItjdCFGoilOLNQbH943ut7pHA==', b'sha512-FISIQxV5u91Y9gvuFq3q/tA/qTqLJn3AhRcEvyozyhJTh5OBFFtv827AdHU7Rbyct4r+Ba1/99oFa1Y3yuFsdw=='),
+          ]
+          for before, after in substitutions:
+              assert data.count(before) == 1
+              data = data.replace(before, after)
+          assert hashlib.sha256(data).hexdigest() == 'b4156f06677c94289f9e3c43a91bb190c9cacddd11f2971437c734f52ccaac14'
+          p.write_bytes(data)
+          assert subprocess.check_output(['git','diff','--name-only'],text=True).strip() == 'package-lock.json'
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == 'b4a5d304c9b111f354c40356b0453bf4a825d4d1'
+          PY
+      - name: Create remediation branch only (no main write, no force)
+        run: |
+          git switch -c fix/body-parser-1-20-9-20261026
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- package-lock.json
+          git commit -m 'fix(deps): update body-parser to 1.20.9 for CVE-2026-111181'
+          git push origin HEAD:refs/heads/fix/body-parser-1-20-9-20261026
+          git rev-parse HEAD
