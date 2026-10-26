@@ -23,7 +23,8 @@ export function parseMockSearchTimestampNs(text: string): bigint | null {
 
   const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   const lengths = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  if (day < 1 || day > lengths[month - 1]) return null;
+  const maxDay = lengths[month - 1];
+  if (maxDay === undefined || day < 1 || day > maxDay) return null;
 
   let offsetMinutes = 0;
   if (match[8] !== 'Z') {
