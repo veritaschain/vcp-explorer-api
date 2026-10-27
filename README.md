@@ -121,10 +121,29 @@ Only the sample event ending in `7890ab` has a bundled proof and certificate.
 ### Search behavior
 
 Implemented filters are `trace_id`, `symbol`, `event_type`, `venue_id`,
-`start_time`, and `end_time`. Time comparisons use JavaScript `Date`.
+`algo_id`, `start_time`, and `end_time`. The `algo_id` filter matches
+`payload.vcp_gov.algo_id` in the available detailed fixtures; a summary without
+matching detail is excluded rather than assigned an inferred algorithm.
+
+Each supplied filter must be one non-empty string. Arrays, nested objects,
+duplicate query values and empty strings return `400 invalid_parameter` before
+the data source is queried. An unsupported `event_type` returns
+`400 invalid_event_type`.
+
+Time filters accept the parser's RFC3339 form: uppercase `T`, `Z` or a numeric
+UTC offset, and zero to nine fractional digits. Invalid calendar dates,
+unsupported timestamp forms and a start later than the end return
+`400 invalid_parameter`. Boundaries are inclusive. JavaScript `Date` is used
+only to convert whole seconds; fractional seconds and comparisons use `bigint`
+nanoseconds, preserving one-nanosecond differences. This is search filtering,
+not verification of timestamp provenance or clock accuracy.
+
 Pagination uses `offset` (default 0) and `limit` (default 50, capped at 500).
-Use non-negative offsets and positive limits; comprehensive query validation is
-not implemented.
+Supplied values must be single unsigned decimal strings within JavaScript's
+safe-integer range: `offset` may be zero, and `limit` must be positive. Invalid
+values return `400 invalid_parameter`; valid limits above 500 are capped.
+These checks apply to the parameters listed here, not every query parameter
+described in the integration documents.
 
 The response `total` is the number of events in the returned page, not a count
 before pagination. Search returns summaries; fetch `/v1/events/:id` for payloads.
@@ -135,10 +154,9 @@ before pagination. Search returns summaries; fetch `/v1/events/:id` for payloads
 [openapi.yaml](openapi.yaml), and [types.ts](types.ts) describe the v1.1 API and
 client integration examples. Some descriptions are ahead of the server:
 
-- `algo_id` is parsed by the route but not applied by the data source.
-  `event_type_code` is not parsed as a search filter.
+- `event_type_code` is not parsed as a search filter; use `event_type`.
 - Missing proofs return `404`; the documented `422 proof_not_available`
-  response and several documented query-validation errors are not implemented.
+  response is not implemented. Implemented search validation is listed above.
 - `/` and `/health` currently hard-code `version: "1.0.0"`, whereas the
   package version is `1.1.0`.
 - There is no `POST /verify`, `/chain/:trace_id`, PDF certificate export,
