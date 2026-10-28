@@ -7,14 +7,20 @@ const { mkdtempSync, readFileSync, writeFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { runInNewContext } = require('node:vm');
 const { before, after, test } = require('node:test');
 const { loadEvidenceDemo } = require('../dist/evidence/demo.js');
+const { createEvidenceDemo, MAX_BUNDLE_BYTES, MAX_TRUST_BYTES } = require('../dist/evidence/core.js');
+const { createEvidenceHttpHandler } = require('../dist/evidence/http.js');
 
 for (const name of ['VCP_EVIDENCE_BUNDLE', 'VCP_EVIDENCE_TRUST', 'VCP_EVIDENCE_SDK_MODULE']) {
   assert.ok(process.env[name], `Set ${name} for the real SDK integration test`);
 }
 const sourceBundle = JSON.parse(readFileSync(process.env.VCP_EVIDENCE_BUNDLE, 'utf8'));
 const sourceTrust = JSON.parse(readFileSync(process.env.VCP_EVIDENCE_TRUST, 'utf8'));
+const bundleText = readFileSync(process.env.VCP_EVIDENCE_BUNDLE, 'utf8');
+const trustText = readFileSync(process.env.VCP_EVIDENCE_TRUST, 'utf8');
+const sdk = require(process.env.VCP_EVIDENCE_SDK_MODULE);
 const evidenceEnv = { ...process.env };
 const dir = mkdtempSync(join(tmpdir(), 'vcp-api-evidence-'));
 process.env.PORT = '0';
@@ -154,6 +160,213 @@ test('an unsupported SDK contract is rejected before evidence verification', () 
   const modulePath = join(dir, 'unsupported-sdk.cjs');
   writeFileSync(modulePath, `module.exports = { ...require(${JSON.stringify(evidenceEnv.VCP_EVIDENCE_SDK_MODULE)}), VCP_SPEC_COMMIT: 'unsupported' };`);
   assert.throws(() => loadEvidenceDemo({ ...evidenceEnv, VCP_EVIDENCE_SDK_MODULE: modulePath }), /unsupported SDK or specification revision/);
+});
+
+test('portable core and Node loader return the identical complete reports and raw evidence', () => {
+  const portable = createEvidenceDemo(sdk, bundleText, trustText);
+  const node = loadEvidenceDemo(evidenceEnv);
+  assert.deepEqual(portable.list(), node.list());
+  const expected = {
+    intact: ['VALID', 'INDETERMINATE'],
+    tampered: ['INVALID', 'INVALID'],
+    'missing-key': ['INDETERMINATE', 'INDETERMINATE'],
+  };
+  for (const item of sourceBundle.cases) {
+    const result = portable.verify(item.id);
+    assert.deepEqual(result, node.verify(item.id));
+    assert.deepEqual([result.local_status, result.overall_status], expected[item.id]);
+    assert.equal(result.evidence.events_jsonl, item.events_jsonl);
+    assert.equal(result.evidence.anchor_record_json, item.anchor_record_json);
+  }
+  assert.equal(portable.verify('unknown'), null);
+});
+
+test('portable core runs without Node globals or module resolution', () => {
+  // Evaluate only the compiled core in a realm without Buffer, process or require.
+  // The real SDK is injected; this is a portability guard, not a Worker-runtime claim.
+  const realm = { exports: {}, TextEncoder };
+  const coreCode = readFileSync(join(__dirname, '../dist/evidence/core.js'), 'utf8');
+  runInNewContext(coreCode, realm, { timeout: 5000 });
+  assert.equal(runInNewContext('typeof Buffer + "/" + typeof process + "/" + typeof require', realm), 'undefined/undefined/undefined');
+  const isolated = realm.exports.createEvidenceDemo(sdk, bundleText, trustText);
+  const normal = createEvidenceDemo(sdk, bundleText, trustText);
+  for (const item of sourceBundle.cases) {
+    // JSON envelopes are compared across realms; signed inner text remains untouched.
+    assert.deepEqual(JSON.parse(JSON.stringify(isolated.verify(item.id))), normal.verify(item.id));
+  }
+});
+
+test('mutating a returned disclosure or proof cannot change later verification', () => {
+  const portable = createEvidenceDemo(sdk, bundleText, trustText);
+  const baseline = portable.verify('intact');
+  const list = portable.list();
+  list.disclosure.push('caller mutation');
+  list.cases[0].title = 'caller mutation';
+  const result = portable.verify('intact');
+  result.evidence.inclusion_proofs[0].tree_size = 999;
+  result.evidence.inclusion_proofs[0].proof[0] = '0'.repeat(64);
+  result.evidence.inclusion_proofs.push({ event_id: 'injected' });
+  assert.deepEqual(portable.verify('intact'), baseline);
+  assert.deepEqual(portable.list().disclosure, sourceBundle.disclosure);
+  assert.notEqual(portable.list().cases[0].title, 'caller mutation');
+});
+
+test('portable core retains byte limits, strict parsing and explicit trust validation', () => {
+  const badBundle = structuredClone(sourceBundle);
+  badBundle.cases[0].inclusion_proofs[0].tree_size = 0;
+  assert.throws(() => createEvidenceDemo(sdk, JSON.stringify(badBundle), trustText), /safe integer/);
+  assert.throws(() => createEvidenceDemo(sdk, '{"format":"x","format":"x"}', trustText), /duplicate key/);
+  assert.throws(() => createEvidenceDemo(sdk, bundleText, '{"cases":{},"cases":{}}'), /duplicate key/);
+  const badTrust = structuredClone(sourceTrust);
+  badTrust.cases.intact.anchor_public_key = '0'.repeat(64);
+  assert.throws(() => createEvidenceDemo(sdk, bundleText, JSON.stringify(badTrust)), /public keys/);
+  assert.throws(() => createEvidenceDemo(sdk, ' '.repeat(MAX_BUNDLE_BYTES + 1), trustText), /within 2097152 bytes/);
+  assert.throws(() => createEvidenceDemo(sdk, bundleText, ' '.repeat(MAX_TRUST_BYTES + 1)), /within 65536 bytes/);
+  // UTF-8 bytes, not JavaScript code-unit count, enforce the input limit.
+  assert.throws(() => createEvidenceDemo(sdk, bundleText, 'あ'.repeat(Math.floor(MAX_TRUST_BYTES / 3) + 1)), /within 65536 bytes/);
+  assert.throws(() => createEvidenceDemo({ ...sdk, fromHex: undefined }, bundleText, trustText), /missing fromHex/);
+  assert.throws(() => createEvidenceDemo({ ...sdk, VERSION: 'unsupported' }, bundleText, trustText), /unsupported SDK/);
+});
+
+test('portable HTTP adapter serves all three actual SDK reports and exact signed text', async () => {
+  const demo = createEvidenceDemo(sdk, bundleText, trustText);
+  const handle = createEvidenceHttpHandler(demo, {
+    allowedOrigins: ['https://veritaschain.org'],
+    provenance: { api_commit: 'test-source-reference', fixture_bytes: bundleText.length }
+  });
+  const request = path => new Request('https://evidence.example' + path);
+  assert.deepEqual(await handle(request('/v1/evidence-demo/cases')).json(), demo.list());
+  const health = await handle(request('/health')).json();
+  assert.equal(health.status, 'ok');
+  assert.equal(health.provenance.api_commit, 'test-source-reference');
+  for (const item of sourceBundle.cases) {
+    const response = handle(request(`/v1/evidence-demo/cases/${item.id}/verification`));
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('vary'), 'Origin');
+    assert.equal(response.headers.get('access-control-allow-credentials'), null);
+    const report = await response.json();
+    assert.deepEqual(report, demo.verify(item.id));
+    assert.equal(report.evidence.events_jsonl, item.events_jsonl);
+    assert.equal(report.evidence.anchor_record_json, item.anchor_record_json);
+    assert.equal(report.provenance, undefined, 'Transport metadata must not change the verification contract');
+  }
+});
+
+test('portable HTTP adapter permits absent/same/exact approved origins and rejects other origins', async () => {
+  const demo = createEvidenceDemo(sdk, bundleText, trustText);
+  const handle = createEvidenceHttpHandler(demo, { allowedOrigins: ['https://veritaschain.org'] });
+  const url = 'https://evidence.example/v1/evidence-demo/cases';
+  for (const origin of [null, 'https://evidence.example', 'https://veritaschain.org']) {
+    const response = handle(new Request(url, { headers: origin ? { Origin: origin } : {} }));
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('access-control-allow-origin'), origin);
+    assert.equal(response.headers.get('access-control-allow-credentials'), null);
+  }
+  for (const origin of ['null', 'https://www.veritaschain.org', 'https://veritaschain.org.evil.example',
+    'http://veritaschain.org', 'https://veritaschain.org/', 'https://unrelated.example']) {
+    const response = handle(new Request(url, { headers: { Origin: origin } }));
+    assert.equal(response.status, 403, origin);
+    assert.equal(response.headers.get('access-control-allow-origin'), null);
+    assert.equal(response.headers.get('vary'), 'Origin');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal((await response.json()).error, 'origin_not_allowed');
+  }
+  const withWww = createEvidenceHttpHandler(demo, { allowedOrigins: ['https://www.veritaschain.org'] });
+  assert.equal(withWww(new Request(url, { headers: { Origin: 'https://www.veritaschain.org' } })).status, 200);
+  for (const origin of ['*', 'https://veritaschain.org/', 'http://veritaschain.org', 'https://unrelated.example']) {
+    assert.throws(() => createEvidenceHttpHandler(demo, { allowedOrigins: [origin] }), /exact approved/);
+  }
+});
+
+test('portable HTTP preflight allows GET/OPTIONS without credentials or arbitrary headers', async () => {
+  const demo = createEvidenceDemo(sdk, bundleText, trustText);
+  const handle = createEvidenceHttpHandler(demo, { allowedOrigins: ['https://veritaschain.org'] });
+  const url = 'https://evidence.example/v1/evidence-demo/cases/intact/verification';
+  const request = extra => new Request(url, { method: 'OPTIONS', headers: {
+    Origin: 'https://veritaschain.org', 'Access-Control-Request-Method': 'GET', ...extra
+  } });
+  const response = handle(request({ 'Access-Control-Request-Headers': 'Accept' }));
+  assert.equal(response.status, 204);
+  assert.equal(await response.text(), '');
+  assert.equal(response.headers.get('access-control-allow-methods'), 'GET, OPTIONS');
+  assert.equal(response.headers.get('access-control-allow-headers'), 'Accept');
+  assert.equal(response.headers.get('access-control-allow-origin'), 'https://veritaschain.org');
+  assert.equal(response.headers.get('access-control-allow-credentials'), null);
+  assert.equal(handle(request({ 'Access-Control-Request-Method': 'POST' })).status, 405);
+  assert.equal(handle(request({ 'Access-Control-Request-Headers': 'Authorization' })).status, 403);
+});
+
+test('portable HTTP unknown paths/cases and unsupported methods never read uploaded data', async () => {
+  const actual = createEvidenceDemo(sdk, bundleText, trustText);
+  let verifyCalls = 0;
+  const handle = createEvidenceHttpHandler({
+    list: () => actual.list(),
+    verify: id => { verifyCalls++; return actual.verify(id); }
+  }, { allowedOrigins: [] });
+  for (const path of ['/missing', '/v1/evidence-demo/cases/',
+    '/v1/evidence-demo/cases/intact/verification/', '/v1/evidence-demo/cases/%69ntact/verification',
+    '/v1/evidence-demo/cases/intact%2Ftampered/verification', '/v1/evidence-demo/cases/%ZZ/verification']) {
+    assert.equal(handle(new Request('https://evidence.example' + path)).status, 404, path);
+  }
+  assert.equal(verifyCalls, 0);
+  const unknown = handle(new Request('https://evidence.example/v1/evidence-demo/cases/unknown/verification'));
+  assert.equal(unknown.status, 404);
+  assert.equal((await unknown.json()).error, 'not_found');
+  for (const method of ['POST', 'PUT', 'DELETE', 'HEAD']) {
+    const request = new Request('https://evidence.example/v1/evidence-demo/cases/intact/verification', {
+      method, ...(method === 'HEAD' ? {} : { body: 'untrusted upload' })
+    });
+    const doNotRead = () => { throw new Error('request body was inspected'); };
+    Object.defineProperty(request, 'body', { get: doNotRead });
+    for (const accessor of ['text', 'json', 'arrayBuffer', 'formData', 'blob']) {
+      Object.defineProperty(request, accessor, { value: doNotRead });
+    }
+    const response = handle(request);
+    assert.equal(response.status, 405, method);
+    assert.equal(response.headers.get('allow'), 'GET, OPTIONS');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+  }
+  assert.equal(verifyCalls, 1, 'Only the syntactically valid unknown case may reach the verifier');
+});
+
+test('portable HTTP verification exceptions return generic 503 without stale success', async () => {
+  const actual = createEvidenceDemo(sdk, bundleText, trustText);
+  let unavailable = false;
+  const handle = createEvidenceHttpHandler({
+    list: () => actual.list(),
+    verify: id => {
+      if (unavailable) throw new Error('private deployment diagnostic');
+      return actual.verify(id);
+    }
+  }, { allowedOrigins: ['https://veritaschain.org'] });
+  const request = () => new Request('https://evidence.example/v1/evidence-demo/cases/intact/verification', {
+    headers: { Origin: 'https://veritaschain.org' }
+  });
+  assert.equal((await handle(request()).json()).local_status, 'VALID');
+  unavailable = true;
+  const response = handle(request());
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(response.headers.get('access-control-allow-origin'), 'https://veritaschain.org');
+  const text = await response.text();
+  assert.doesNotMatch(text, /private deployment diagnostic|VALID|local_status|checks/);
+  assert.deepEqual(JSON.parse(text), { error: 'service_unavailable', message: 'Evidence verification is unavailable' });
+});
+
+test('portable HTTP copies allowlist/provenance and rejects non-plain transport metadata', async () => {
+  const demo = createEvidenceDemo(sdk, bundleText, trustText);
+  const origins = ['https://veritaschain.org'];
+  const provenance = { source_commit: 'reviewed-source', public_demo: true };
+  const handle = createEvidenceHttpHandler(demo, { allowedOrigins: origins, provenance });
+  origins.push('https://unrelated.example');
+  provenance.source_commit = 'caller mutation';
+  const health = handle(new Request('https://evidence.example/health'));
+  assert.equal((await health.json()).provenance.source_commit, 'reviewed-source');
+  assert.equal(handle(new Request('https://evidence.example/health', { headers: { Origin: 'https://unrelated.example' } })).status, 403);
+  for (const value of [[], new Date(), { bad: Infinity }, { bad: {} }, { bad: () => true }]) {
+    assert.throws(() => createEvidenceHttpHandler(demo, { allowedOrigins: [], provenance: value }), /Provenance/);
+  }
 });
 
 test('partial configuration exits before the HTTP server starts', () => {

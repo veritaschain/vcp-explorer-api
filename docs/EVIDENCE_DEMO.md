@@ -67,11 +67,46 @@ The adapter supports SDK `0.1.0`, VCP specification `1.2.0` at
 compatibility; they do not authenticate the SDK module or prove a source commit.
 Upgrading the adapter requires reviewing check names and the scope split.
 
-Files are read at startup. Restart after changing evidence or trust. The bundle
+The Node adapter reads files at startup. Restart after changing evidence or trust. The bundle
 is limited to 2 MiB, 32 cases and 100 events/proofs per case; trust is limited to
 64 KiB. Proof indices/tree sizes must be safe integers and sibling paths have at
 most 53 hashes. The existing API rate limit applies. No external network access
 or persistence is performed by this demonstration.
+
+## Portable core and Fetch-API transport
+
+`src/evidence/core.ts` exports
+`createEvidenceDemo(sdkModule, bundleJson, trustJson)`. It accepts the actual SDK
+module plus the original bundle and separate trust JSON strings, applies the
+same validation and limits as the Node adapter, and returns `list()` and
+`verify(caseId)`. The core uses no filesystem, module loader, network or Node
+globals. It preserves the exact signed inner JSON strings and copies returned
+proof/disclosure arrays so response mutation cannot change later verification.
+
+`src/evidence/http.ts` exports
+`createEvidenceHttpHandler(demo, { allowedOrigins, provenance? })`, returning a
+standard `(request: Request) => Response` function. A host can statically bundle
+the reviewed SDK and public fixture text, then import these same two modules.
+The HTTP adapter serves the two evidence endpoints below and `GET /health`;
+optional plain scalar provenance metadata appears only in the health response.
+It does not change the evidence/report envelopes or the existing Express routes.
+
+All responses use `Cache-Control: no-store` and `Vary: Origin`. Requests without
+an Origin header and same-origin requests are accepted. Cross-origin access
+requires an explicitly listed `https://veritaschain.org` and/or
+`https://www.veritaschain.org`; wildcards and unrelated origins are rejected,
+and `Access-Control-Allow-Credentials` is never emitted. Known routes accept GET/OPTIONS only. Preflight allows
+GET/OPTIONS and an optional Accept header, without invoking verification.
+Unknown/malformed routes and unknown GET case IDs return `404`, unsupported
+methods `405`, disallowed origins/headers `403`, and
+verification exceptions a generic `503` without any previous result or internal
+diagnostics. Request bodies are never read or treated as evidence uploads.
+
+The portable transport introduces no storage or distributed rate limiter.
+Actual host-runtime and public-endpoint validation remain separate from these
+source-level and local Fetch-API tests. SDK/spec compatibility declarations do
+not authenticate deployed source; publication should record the reviewed source
+commits and bundled file hashes independently.
 
 ## HTTP contract
 
