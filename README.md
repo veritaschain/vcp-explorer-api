@@ -13,11 +13,22 @@ Express / TypeScript HTTP API for exploring sample VeritasChain Protocol (VCP)
 events. This repository contains the API server, in-memory fixtures, API
 documentation, and client integration types.
 
-**Implementation status:** the server currently returns mock data. Event hashes,
+**Default implementation status:** the existing `/v1/events`, system and entity
+routes return mock data. Event hashes,
 signatures, Merkle paths, anchors, certification statuses, and system statistics
 are demonstration values, not verified evidence or a live certification registry.
-The server retrieves proof fixtures and assembles JSON certificates; it does not
+These routes retrieve proof fixtures and assemble JSON certificates; they do not
 perform cryptographic verification, contact an external anchor, or persist events.
+
+**Optional SDK evidence demonstration:** `/v1/evidence-demo` can be enabled with
+an explicitly configured local [VCP SDK](https://github.com/veritaschain/vcp-sdk)
+build, its generated signed event bundle, and a separate trust configuration.
+The API recomputes hash, signature, batch, chain and inclusion checks for intact,
+tampered and missing-key cases. The intact case passes the local checks while
+its overall result stays `INDETERMINATE` because no external anchor is verified.
+See [SDK → API → GUI evidence demonstration](docs/EVIDENCE_DEMO.md) for setup,
+the response contract and the public test-key scope. Ordinary installation and
+the existing fixture routes do not require the SDK.
 
 ## Quick Start
 
@@ -85,6 +96,7 @@ error responses, CORS error handling, and the rate limit.
 | Rate limit | 60 requests per minute per IP on `/v1/`; standard rate-limit headers enabled, legacy `X-RateLimit-*` headers disabled |
 | Authentication | No authentication middleware is implemented |
 | Storage | In-memory mock data in `src/data/`; no database configuration |
+| Optional evidence demo | Explicit local `VCP_EVIDENCE_BUNDLE`, `VCP_EVIDENCE_TRUST`, and `VCP_EVIDENCE_SDK_MODULE`; see [configuration](docs/EVIDENCE_DEMO.md) |
 
 For example, in a POSIX shell:
 
@@ -160,7 +172,8 @@ client integration examples. Some descriptions are ahead of the server:
 - `/` and `/health` currently hard-code `version: "1.0.0"`, whereas the
   package version is `1.1.0`.
 - There is no `POST /verify`, `/chain/:trace_id`, PDF certificate export,
-  WebSocket stream, or server-side cryptographic verifier.
+  or WebSocket stream. The optional read-only `/v1/evidence-demo` routes are a
+  separate SDK verification demonstration, not implementations of those interfaces.
 - Proof and certificate responses do not establish RFC 6962 validation,
   regulatory compliance, or VCP certification. Integration snippets must be
   checked against the runtime response shapes and the canonical specification.
