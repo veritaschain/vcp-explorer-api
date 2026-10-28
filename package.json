@@ -1,7 +1,7 @@
 {
   "name": "vcp-explorer-api",
   "version": "1.1.0",
-  "description": "Reference HTTP API for browsing VeritasChain Protocol (VCP) demo events and proof fixtures; no server-side cryptographic verification.",
+  "description": "Reference HTTP API for VCP demo fixtures, with opt-in offline SDK evidence verification; no external-anchor verification.",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -10,7 +10,8 @@
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
-    "test": "node --test test/*.test.cjs"
+    "test": "node --test test/*.test.cjs",
+    "test:evidence": "node --test test/evidence-demo.integration.cjs"
   },
   "keywords": [
     "veritaschain",

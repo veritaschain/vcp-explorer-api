@@ -9,9 +9,18 @@ import systemRoutes from './routes/system';
 import eventsRoutes from './routes/events';
 import entitiesRoutes from './routes/entities';
 import { apiLimiter } from './middleware/rateLimiter';
+import { loadEvidenceDemo, evidenceOrigin } from './evidence/demo';
+import { evidenceDemoRoutes } from './routes/evidenceDemo';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const portValue = process.env.PORT ?? '3001';
+const PORT = Number(portValue);
+if (!/^\d+$/.test(portValue) || !Number.isSafeInteger(PORT) || PORT > 65535) {
+  throw new Error('PORT must be an integer from 0 through 65535');
+}
+const HOST = process.env.HOST;
+const evidenceDemo = loadEvidenceDemo(process.env);
+const demoOrigin = evidenceOrigin(process.env, evidenceDemo !== null);
 
 // ====================================
 // Security Middleware
@@ -27,6 +36,7 @@ const allowedOrigins = [
   'http://localhost:3000', // 開発用
   'http://localhost:5173'  // Vite開発用
 ];
+if (demoOrigin) allowedOrigins.push(demoOrigin);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -64,6 +74,7 @@ app.use('/v1/', apiLimiter);
 app.use('/v1/system', systemRoutes);
 app.use('/v1/events', eventsRoutes);
 app.use('/v1/certified/entities', entitiesRoutes);
+if (evidenceDemo) app.use('/v1/evidence-demo', evidenceDemoRoutes(evidenceDemo));
 
 // ====================================
 // Health Check
@@ -122,7 +133,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 // ====================================
 // Server Start
 // ====================================
-export const server = app.listen(PORT, () => {
+const onStarted = () => {
   console.log('');
   console.log('✅ VCP Explorer API Server Started');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -137,7 +148,8 @@ export const server = app.listen(PORT, () => {
   console.log(`  GET /v1/certified/entities`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
-});
+};
+export const server = HOST ? app.listen(PORT, HOST, onStarted) : app.listen(PORT, onStarted);
 
 // ====================================
 // WebSocket拡張ポイント

@@ -1,0 +1,48 @@
+name: SDK evidence integration
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: api
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: veritaschain/vcp-sdk
+          ref: eb8df265a09f2415154de2ae2a617bb502c558d2
+          path: sdk
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: api/.nvmrc
+          package-manager-cache: false
+      - name: Build the pinned SDK
+        working-directory: sdk/typescript
+        run: |
+          npm ci --no-audit
+          npm run build
+      - name: Build this API revision
+        working-directory: api
+        run: |
+          npm ci --no-audit
+          npm run build
+      - name: Verify generated evidence over the real SDK and HTTP routes
+        working-directory: api
+        env:
+          VCP_EVIDENCE_SDK_MODULE: ${{ github.workspace }}/sdk/typescript/dist/index.js
+          VCP_EVIDENCE_BUNDLE: ${{ github.workspace }}/sdk/examples/explorer-demo/bundle.json
+          VCP_EVIDENCE_TRUST: ${{ github.workspace }}/sdk/examples/explorer-demo/trust.json
+        run: npm run test:evidence
