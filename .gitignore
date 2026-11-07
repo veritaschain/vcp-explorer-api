@@ -3,3 +3,6 @@ dist/
 *.log
 .env
 .env.*
+
+# Local AI-agent permission records may contain credentials in command arguments.
+**/.claude/settings.local.json
