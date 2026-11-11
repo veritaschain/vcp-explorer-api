@@ -2,7 +2,7 @@
  * VCP Explorer API v1.1 - TypeScript Type Definitions
  * VeritasChain Standards Organization (VSO)
  * 
- * Complete type definitions for frontend development
+ * Integration types for the mock API; not a conformance validator
  * 
  * @version 1.1.0
  * @license Apache-2.0 — see LICENSE
@@ -13,8 +13,8 @@
 // ============================================================================
 
 /**
- * Event Type Enum - VCP Spec v1.0
- * @see https://veritaschain.org/vcp-spec#event-types
+ * Event names used by the existing legacy fixture response format.
+ * EventSearchType additionally accepts the VCP v1.2 structured-schema vocabulary.
  */
 export enum EventType {
   SIG = 'SIG', // Signal/Decision generated (code: 1)
@@ -36,7 +36,7 @@ export enum EventType {
 }
 
 /**
- * Fixed Event Type Codes - IMMUTABLE per VCP Spec v1.0
+ * Legacy numeric codes retained for the existing fixture response format.
  */
 export const EVENT_TYPE_CODES: Record<EventType, number> = {
   [EventType.SIG]: 1,
@@ -56,6 +56,20 @@ export const EVENT_TYPE_CODES: Record<EventType, number> = {
   [EventType.REC]: 100,
   [EventType.SNC]: 101,
 };
+
+/**
+ * Search vocabulary from vcp-spec@0315b3e93cd6d96b7d9b3d7513aa43fbe5887849,
+ * spec/v1.2/vcp-event-v1.2.json, $defs.Header.properties.EventType.
+ * These names do not receive invented numeric codes or new mock payloads.
+ */
+export const VCP_V1_2_EVENT_TYPES = [
+  'INIT', 'SIG', 'ORD', 'ACK', 'EXE', 'CXL', 'MOD', 'RSK', 'ERR', 'HBT', 'CLS', 'ANC',
+  'ERR_CONN', 'ERR_AUTH', 'ERR_TIMEOUT', 'ERR_REJECT', 'ERR_PARSE', 'ERR_SYNC',
+  'ERR_RISK', 'ERR_SYSTEM', 'ERR_RECOVER', 'ERASURE', 'SYS_RECOVERY_ANNOUNCE',
+  'SYS_CHECKPOINT', 'SYS_AUDIT', 'SYS_ANCHOR_MIGRATION', 'SYS_ANCHOR_FAILOVER'
+] as const;
+
+export type EventSearchType = EventType | typeof VCP_V1_2_EVENT_TYPES[number];
 
 export enum TimestampPrecision {
   NANOSECOND = 'NANOSECOND',
@@ -311,8 +325,7 @@ export interface BlockchainAnchor {
 // ============================================================================
 
 /**
- * Merkle Proof - RFC 6962 Compliant
- * "Verify, Don't Trust"
+ * Stored demonstration proof fields; not a verification result.
  */
 export interface MerkleProof {
   event_id: string;
@@ -320,6 +333,7 @@ export interface MerkleProof {
   merkle_proof: {
     root_hash: string;
     leaf_index: number;
+    tree_size?: number; // Missing in current mock fixtures; never infer from path length.
     audit_path: string[]; // Sibling hashes
   };
   anchor_info: BlockchainAnchor;
@@ -328,7 +342,7 @@ export interface MerkleProof {
 }
 
 /**
- * Event Certificate - Regulatory Compliance
+ * Demonstration JSON assembled from fixtures; not a compliance finding.
  */
 export interface EventCertificate {
   event_id: string;
@@ -351,7 +365,7 @@ export interface EventCertificate {
 export interface EventSearchParams {
   trace_id?: string; // UUID v7
   symbol?: string;
-  event_type?: EventType;
+  event_type?: EventSearchType;
   start_time?: string; // ISO8601
   end_time?: string; // ISO8601
   algo_id?: string;

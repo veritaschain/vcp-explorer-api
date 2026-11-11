@@ -102,9 +102,13 @@ paths:
           example: "XAUUSD"
         - name: event_type
           in: query
-          description: Event type filter
+          description: >-
+            Case-sensitive search name from the VCP v1.2 structured registry or
+            the retained legacy fixture vocabulary. Registered names without
+            matching mock records return an empty page; this does not implement
+            their event production, payload rules or verification.
           schema:
-            $ref: '#/components/schemas/EventType'
+            $ref: '#/components/schemas/EventSearchType'
         - name: start_time
           in: query
           description: Inclusive RFC3339 lower bound (UTC Z or numeric offset, 1-9 fractional digits permitted; no leap seconds)
@@ -839,8 +843,51 @@ components:
           example: "2025-Q3"
 
     # Enums
+    EventSearchType:
+      type: string
+      description: >-
+        Search-only union of the VCP v1.2 structured-schema names and the
+        existing legacy fixture names. Numeric codes are not assigned here.
+        Source: https://github.com/veritaschain/vcp-spec/blob/0315b3e93cd6d96b7d9b3d7513aa43fbe5887849/spec/v1.2/vcp-event-v1.2.json
+      enum:
+        - SIG
+        - ORD
+        - ACK
+        - EXE
+        - PRT
+        - REJ
+        - CXL
+        - MOD
+        - CLS
+        - ALG
+        - RSK
+        - AUD
+        - HBT
+        - ERR
+        - REC
+        - SNC
+        - INIT
+        - ANC
+        - ERR_CONN
+        - ERR_AUTH
+        - ERR_TIMEOUT
+        - ERR_REJECT
+        - ERR_PARSE
+        - ERR_SYNC
+        - ERR_RISK
+        - ERR_SYSTEM
+        - ERR_RECOVER
+        - ERASURE
+        - SYS_RECOVERY_ANNOUNCE
+        - SYS_CHECKPOINT
+        - SYS_AUDIT
+        - SYS_ANCHOR_MIGRATION
+        - SYS_ANCHOR_FAILOVER
+      example: "ERASURE"
+
     EventType:
       type: string
+      description: Names present in the legacy fixture response contract; not the complete VCP v1.2 registry.
       enum:
         - SIG  # 1
         - ORD  # 2

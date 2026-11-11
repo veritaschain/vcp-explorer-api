@@ -9,6 +9,24 @@ export const EVENT_TYPE_CODES: Record<EventType, number> = {
   ALG: 20, RSK: 21, AUD: 22, HBT: 98, ERR: 99, REC: 100, SNC: 101
 };
 
+// Names accepted by the search filter from the fixed VCP v1.2 structured schema.
+// This does not add event producers, payload validation or numeric code assignments.
+// Source: vcp-spec@0315b3e93cd6d96b7d9b3d7513aa43fbe5887849,
+// spec/v1.2/vcp-event-v1.2.json, $defs.Header.properties.EventType.
+export const VCP_V1_2_EVENT_TYPES = [
+  'INIT', 'SIG', 'ORD', 'ACK', 'EXE', 'CXL', 'MOD', 'RSK', 'ERR', 'HBT', 'CLS', 'ANC',
+  'ERR_CONN', 'ERR_AUTH', 'ERR_TIMEOUT', 'ERR_REJECT', 'ERR_PARSE', 'ERR_SYNC',
+  'ERR_RISK', 'ERR_SYSTEM', 'ERR_RECOVER', 'ERASURE', 'SYS_RECOVERY_ANNOUNCE',
+  'SYS_CHECKPOINT', 'SYS_AUDIT', 'SYS_ANCHOR_MIGRATION', 'SYS_ANCHOR_FAILOVER'
+] as const;
+
+export type EventSearchType = EventType | typeof VCP_V1_2_EVENT_TYPES[number];
+
+export function isEventSearchType(value: string): value is EventSearchType {
+  return Object.prototype.hasOwnProperty.call(EVENT_TYPE_CODES, value) ||
+    VCP_V1_2_EVENT_TYPES.some(type => type === value);
+}
+
 export type TimestampPrecision = 'NANOSECOND' | 'MICROSECOND' | 'MILLISECOND';
 export type ComplianceTier = 'PLATINUM' | 'GOLD' | 'SILVER';
 export type ClockSyncStatus = 'PTP_LOCKED' | 'NTP_SYNCED' | 'BEST_EFFORT' | 'UNRELIABLE';
@@ -168,7 +186,7 @@ export interface EventCertificate {
 export interface EventSearchParams {
   trace_id?: string;
   symbol?: string;
-  event_type?: EventType;
+  event_type?: EventSearchType;
   start_time?: string; // ISO8601
   end_time?: string; // ISO8601
   algo_id?: string;

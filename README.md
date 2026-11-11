@@ -140,7 +140,13 @@ matching detail is excluded rather than assigned an inferred algorithm.
 Each supplied filter must be one non-empty string. Arrays, nested objects,
 duplicate query values and empty strings return `400 invalid_parameter` before
 the data source is queried. An unsupported `event_type` returns
-`400 invalid_event_type`.
+`400 invalid_event_type`. The search accepts the 27 names in the
+[fixed VCP v1.2 structured schema](https://github.com/veritaschain/vcp-spec/blob/0315b3e93cd6d96b7d9b3d7513aa43fbe5887849/spec/v1.2/vcp-event-v1.2.json)
+and retains six legacy fixture names (`PRT`, `REJ`, `ALG`, `AUD`, `REC`, `SNC`),
+for 33 accepted names in total. New registered names without bundled data return
+an empty page. This changes filtering vocabulary only: fixture payloads, signatures,
+legacy numeric codes and verification outcomes are unchanged. The client/OpenAPI
+`EventSearchType` is distinct from the legacy fixture response `EventType`.
 
 Time filters accept the parser's RFC3339 form: uppercase `T`, `Z` or a numeric
 UTC offset, and zero to nine fractional digits. Invalid calendar dates,
