@@ -34,13 +34,13 @@ npx @apidevtools/swagger-cli validate openapi.yaml
 ```
 
 ### 2. `types.ts` - TypeScript Type Definitions
-**Purpose:** Production-ready type definitions for frontend development
+**Purpose:** Client integration types for the demonstration API. They provide compile-time assistance, not production-readiness, cryptographic verification or conformance findings.
 
 **Use cases:**
 - Type-safe API integration in React/Vue/Angular
 - IDE autocomplete and IntelliSense
 - Compile-time type checking
-- Runtime type guards
+- Structural shape guards; these do not authenticate values
 
 **Installation:**
 ```bash
@@ -65,18 +65,22 @@ setup, current implementation behavior, limitations, and canonical VCP status.
 // src/api/vcp-client.ts
 import {
   EventDetail,
+  EventSummary,
+  EventCertificate,
   EventSearchParams,
   MerkleProof,
   EventType,
   VcpApiError
 } from './vcp-types';
 
-const API_BASE_URL = 'https://api-explorer.veritaschain.org/v1';
+const API_BASE_URL = 'http://localhost:3001/v1';
 
 export class VcpApiClient {
-  async searchEvents(params: EventSearchParams): Promise<EventDetail[]> {
+  async searchEvents(params: EventSearchParams): Promise<EventSummary[]> {
     const query = new URLSearchParams(
-      Object.entries(params).filter(([_, v]) => v !== undefined)
+      Object.entries(params)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)])
     );
     
     const response = await fetch(`${API_BASE_URL}/events?${query}`);
@@ -106,6 +110,15 @@ export class VcpApiClient {
       throw new VcpApiError(error.error, error.message, response.status);
     }
     
+    return response.json();
+  }
+
+  async getEventCertificate(eventId: string): Promise<EventCertificate> {
+    const response = await fetch(`${API_BASE_URL}/events/${eventId}/certificate`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new VcpApiError(error.error, error.message, response.status);
+    }
     return response.json();
   }
 }
@@ -166,7 +179,7 @@ class EventSearchParams:
     limit: int = 50
 
 class VcpApiClient:
-    def __init__(self, base_url: str = "https://api-explorer.veritaschain.org/v1"):
+    def __init__(self, base_url: str = "http://localhost:3001/v1"):
         self.base_url = base_url
         self.session = requests.Session()
 
@@ -200,68 +213,43 @@ events = client.search_events(EventSearchParams(
 event = client.get_event_by_id("01934e3a-7b2c-7f93-8f2a-1234567890ab")
 print(f"Event type: {event['header']['event_type']}")
 
-# Verify with Merkle proof
+# Inspect the unverified proof fixture
 proof = client.get_merkle_proof(event['header']['event_id'])
 print(f"Root hash: {proof['merkle_proof']['root_hash']}")
 ```
 
 ---
 
-## 🔐 Merkle Proof Verification
+## Proof fixture and verification boundaries
 
-### JavaScript/TypeScript
+`getMerkleProof` fetches stored fields. The current fixture omits `tree_size` and
+supplies no authenticated external anchor. A displayed root match would not
+establish event authenticity or conformance. The earlier `JSON.stringify` and
+left-fold example was removed: it did not canonicalize with RFC 8785, use the leaf
+index/tree size to place siblings, or authenticate the root.
 
-```typescript
-import crypto from 'crypto';
-import { MerkleProof, EventDetail } from './vcp-types';
+For integration, display the supplied `verification_hint` and retain an explicit
+unverified state. See [API verification limits](API_REFERENCE.md#verification-limits)
+and the separate [SDK evidence demo contract](docs/EVIDENCE_DEMO.md). Use that demo's
+specified inputs and result scope when exercising its routes; do not apply its
+outcomes to the legacy mock records.
 
-/**
- * Verify event inclusion in Merkle tree (RFC 6962)
- */
-export function verifyMerkleProof(
-  event: EventDetail,
-  proof: MerkleProof
-): boolean {
-  // Step 1: Compute leaf hash
-  const canonicalJson = JSON.stringify(event); // Simplified
-  const leafHash = crypto
-    .createHash('sha256')
-    .update(Buffer.concat([Buffer.from([0x00]), Buffer.from(canonicalJson)]))
-    .digest();
+### Event-type search vocabulary
 
-  // Step 2: Traverse audit path
-  let currentHash = leafHash;
-  for (const siblingHash of proof.merkle_proof.audit_path) {
-    const sibling = Buffer.from(siblingHash, 'hex');
-    currentHash = crypto
-      .createHash('sha256')
-      .update(Buffer.concat([Buffer.from([0x01]), currentHash, sibling]))
-      .digest();
-  }
-
-  // Step 3: Verify root
-  const expectedRoot = proof.merkle_proof.root_hash;
-  const computedRoot = currentHash.toString('hex');
-  
-  return expectedRoot === computedRoot;
-}
-
-// Usage
-const event = await client.getEventById(eventId);
-const proof = await client.getMerkleProof(eventId);
-
-if (verifyMerkleProof(event, proof)) {
-  console.log('✓ Event verified - data is authentic');
-} else {
-  console.error('✗ Verification failed - data may be tampered');
-}
-```
+`EventSearchParams.event_type` uses `EventSearchType`: the VCP v1.2 structured
+registry plus retained legacy fixture names. For example, `{ event_type: 'ERASURE' }`
+is an accepted query and currently returns an empty page. It does not perform
+erasure or validate an ERASURE payload. `EventType` and `EVENT_TYPE_CODES` remain
+the legacy fixture response vocabulary; no new numeric codes are invented.
 
 ---
 
 ## 📊 Common Patterns
 
-### 1. Track Complete Transaction (TraceID)
+These snippets assume a configured `client`. Search returns summary records for
+one page; it does not return full event payloads or prove trace completeness.
+
+### 1. Inspect the Returned Trace Page (TraceID)
 
 ```typescript
 async function trackTransaction(traceId: string) {
@@ -281,10 +269,12 @@ async function trackTransaction(traceId: string) {
 }
 ```
 
-### 2. Monitor Algorithm Performance
+### 2. Summarize a Returned Execution Page
 
 ```typescript
-async function getAlgorithmStats(algoId: string, timeRange: TimeRange) {
+import { TimeRange } from './vcp-types';
+
+async function getExecutionPageStats(algoId: string, timeRange: TimeRange) {
   const events = await client.searchEvents({
     algo_id: algoId,
     start_time: timeRange.start_time,
@@ -293,27 +283,23 @@ async function getAlgorithmStats(algoId: string, timeRange: TimeRange) {
   });
 
   const stats = {
-    total_trades: events.length,
-    symbols: new Set(events.map(e => e.symbol)).size,
-    total_volume: events.reduce((sum, e) => {
-      const size = parseFloat(e.payload.trade_data?.order_size || '0');
-      return sum + size;
-    }, 0)
+    returned_executions: events.length,
+    symbols_on_page: new Set(events.map(e => e.symbol)).size
   };
 
   return stats;
 }
 ```
 
-### 3. Generate Compliance Report
+### 3. Export Demonstration JSON
 
 ```typescript
-async function generateComplianceReport(eventIds: string[]) {
+async function exportDemoFixtures(eventIds: string[]) {
   const certificates = await Promise.all(
     eventIds.map(id => client.getEventCertificate(id))
   );
 
-  // Export as JSON for regulatory submission
+  // Export mock data for inspection; not a compliance finding or accepted evidence
   const report = {
     generated_at: new Date().toISOString(),
     vcp_version: '1.0',
@@ -363,13 +349,13 @@ npx @openapitools/openapi-generator-cli generate \
 ### 1. Error Handling
 
 ```typescript
-import { VcpApiError, isApiError } from './vcp-types';
+import { VcpApiError } from './vcp-types';
 
 try {
   const event = await client.getEventById(eventId);
 } catch (error) {
-  if (isApiError(error)) {
-    console.error(`API Error: ${error.error} - ${error.message}`);
+  if (error instanceof VcpApiError) {
+    console.error(`API Error: ${error.code} - ${error.message}`);
   } else {
     console.error('Unexpected error:', error);
   }
@@ -445,7 +431,7 @@ describe('VCP Types', () => {
 ## 📞 Support
 
 - **API Documentation**: https://docs.veritaschain.org
-- **OpenAPI Spec**: https://api-explorer.veritaschain.org/openapi.yaml
+- **OpenAPI Spec**: [openapi.yaml](openapi.yaml)
 - **GitHub**: https://github.com/veritaschain/vcp-explorer-api
 - **Email**: standards@veritaschain.org
 

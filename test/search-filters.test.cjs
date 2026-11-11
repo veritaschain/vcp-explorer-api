@@ -3,7 +3,13 @@
 const assert = require('node:assert/strict');
 const { once } = require('node:events');
 const { before, after, test } = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const ts = require('typescript');
 const { EventsDataSource } = require('../dist/data/events.js');
+const { EVENT_TYPE_CODES, VCP_V1_2_EVENT_TYPES } = require('../dist/types/index.js');
+const registry = require('./fixtures/vcp-v1.2-event-registry.json');
 
 process.env.PORT = '0';
 const { server } = require('../dist/index.js');
@@ -57,6 +63,36 @@ for (const name of ['INVALID', 'ord', '__proto__']) {
     const body = await request('event_type=' + encodeURIComponent(name), 400);
     assert.equal(body.error, 'invalid_event_type');
     assert.equal(searches, beforeCalls);
+  });
+}
+test('search vocabulary matches the pinned registry across server, client and OpenAPI without assigning new codes', () => {
+  assert.deepEqual(VCP_V1_2_EVENT_TYPES, registry.vcp_v1_2_names);
+  assert.deepEqual(EVENT_TYPE_CODES, registry.preserved_legacy_fixture_codes);
+  const client = { exports: {} };
+  const source = fs.readFileSync(path.join(__dirname, '../types.ts'), 'utf8');
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS }
+  });
+  vm.runInNewContext(compiled.outputText, { exports: client.exports }, { timeout: 1000 });
+  assert.deepEqual(Array.from(client.exports.VCP_V1_2_EVENT_TYPES), registry.vcp_v1_2_names);
+  assert.deepEqual(JSON.parse(JSON.stringify(client.exports.EVENT_TYPE_CODES)), registry.preserved_legacy_fixture_codes);
+  const expected = [...new Set([...Object.keys(registry.preserved_legacy_fixture_codes), ...registry.vcp_v1_2_names])].sort();
+  const yaml = fs.readFileSync(path.join(__dirname, '../openapi.yaml'), 'utf8');
+  const section = yaml.match(/    EventSearchType:\n([\s\S]*?)(?=\n    [A-Za-z]\w*:)/);
+  assert.ok(section, 'OpenAPI search schema is missing');
+  const declared = [...section[1].matchAll(/^        - ([A-Z][A-Z_]*)$/gm)].map(match => match[1]).sort();
+  assert.deepEqual(declared, expected);
+  assert.equal(declared.length, 33);
+});
+for (const name of registry.vcp_v1_2_names.filter(name => !Object.hasOwn(registry.preserved_legacy_fixture_codes, name))) {
+  test(`registered ${name} search is accepted with an empty page and no invented fixture`, async () => {
+    const beforeCalls = searches;
+    const body = await request('event_type=' + name, 200);
+    assert.equal(searches, beforeCalls + 1);
+    assert.deepEqual(body.events, []);
+    assert.equal(body.total, 0);
+    assert.equal(body.query.event_type, name);
+    assert.equal(Object.hasOwn(EVENT_TYPE_CODES, name), false);
   });
 }
 test('algo_id searches VCP-GOV detailed fixtures, not every summary', async () => {

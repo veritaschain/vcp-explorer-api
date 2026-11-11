@@ -196,7 +196,7 @@ export const mockMerkleProofs: Record<string, MerkleProof> = {
       anchored_at: '2025-11-24T14:10:00Z'
     },
     hash_algo: 'SHA256',
-    verification_hint: 'RFC 6962: Compute leaf = SHA256(0x00 || canonical_json), then hash with each audit_path element using SHA256(0x01 || left || right) to match root_hash.'
+    verification_hint: 'Unverified demo fixture. Tree size and authenticated anchor evidence are not supplied; this response does not establish Merkle inclusion or external anchoring.'
   }
 };
 

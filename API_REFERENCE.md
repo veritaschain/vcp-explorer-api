@@ -1,22 +1,22 @@
-# VCP Explorer API v1.1 - Complete API Reference
+# VCP Explorer API v1.1 - API Reference
 
 > **Implementation scope:** the current server uses mock data. See the
 > [README implementation notes](README.md#differences-from-the-integration-documents)
 > for implemented filters, response differences, and verification limitations.
-> Production-readiness and compliance language below describes intended capabilities,
-> not validated properties of this server. See the
+> Proof, anchor, tier and certificate fields are demonstration metadata. The
+> optional [SDK evidence routes](docs/EVIDENCE_DEMO.md) have a separate contract. See the
 > [versioning notes](README.md#vcp-specification-and-versioning) for canonical VCP status.
 
 **"Verify, Don't Trust" - Merkle Proof Verification & VCP Module Structure**
 
-Demo API returning mock data, with proof and certificate fixtures and search. VCP Specification v1.0 is the target format; conformance has not been established, and VCP v1.0 is superseded by v1.2 (tag `v1.2.0`).
+Demo API returning mock data, with proof and certificate fixtures and search. Existing response fixtures target the legacy VCP v1.0 format; conformance has not been established. The search-name allowlist also accepts the VCP v1.2 structured-schema registry (see below). Accepting a search name does not implement that event's production, payload rules or verification.
 
 ---
 
 ## 🎯 What's New in v1.1
 
 ### Verification Features (fixtures; no server-side verification)
-- **Merkle Proof API** (`/v1/events/:id/proof`) - External verification capability
+- **Merkle Proof API** (`/v1/events/:id/proof`) - Stored proof fields with an explicit unverified-fixture notice
 - **Event Certificate** (`/v1/events/:id/certificate`) - JSON export assembled from fixtures (not a compliance finding)
 
 ### ✅ VCP Module Structure
@@ -25,8 +25,8 @@ Demo API returning mock data, with proof and certificate fixtures and search. VC
 - **VCP-GOV** - Algorithm governance & AI explainability
 
 ### ✅ Advanced Search
-- **TraceID** - Track complete transaction lifecycle
-- **Symbol, Time Range, Event Type** - Audit-ready filtering
+- **TraceID** - Filter the available event-summary fixtures by trace ID
+- **Symbol, Time Range, Event Type** - Filter the available mock records
 - **Algo ID** - Algorithm-specific event filtering
 
 ### VCP Spec v1.0 Format Targets (conformance not established)
@@ -52,7 +52,7 @@ Server runs on `http://localhost:3001`
 
 ### Base URL
 - **Development**: `http://localhost:3001/v1/`
-- **Production**: `https://api-explorer.veritaschain.org/v1/`
+Use a deployment URL only after its operator has provided and validated it; this reference makes no public production-host commitment.
 
 ---
 
@@ -62,7 +62,7 @@ Server runs on `http://localhost:3001`
 GET /v1/system/status
 ```
 
-Returns global system statistics.
+Returns a fixed system-status fixture. Counts, anchors, precision and tier are sample values, not measurements of a live network or certification results.
 
 **Response:**
 ```json
@@ -99,7 +99,7 @@ GET /v1/events
 | `end_time` | RFC3339 | No | Inclusive end boundary, must be >= start_time | `2025-11-24T23:59:59Z` |
 | `algo_id` | String | No | Match VCP-GOV algorithm ID from available detailed mock event fixtures (unknown or missing IDs do not match) | `neural-scalper-v1.2` |
 | `venue_id` | String | No | Venue/broker/exchange identifier | `XNAS`, `BINANCE` |
-| `limit` | Integer | No | Maximum results (1-500, default: 50) | `100` |
+| `limit` | Integer | No | Positive decimal safe integer; capped at 500, default: 50 | `100` |
 | `offset` | Integer | No | Pagination offset (default: 0) | `50` |
 
 All supplied filters must be non-empty, single-valued query parameters; duplicate,
@@ -119,7 +119,7 @@ The strings are neither rounded nor rewritten. This does **not** establish
 clock accuracy, consistency with unrelated mock detail `timestamp_int`
 fields, authenticity of recorded events or VCP conformance.
 
-**Event Types Reference:**
+**Legacy fixture response codes:**
 
 | Code | Type | Description |
 |------|------|-------------|
@@ -130,15 +130,33 @@ fields, authenticity of recorded events or VCP conformance.
 | 5 | PRT | Partial fill |
 | 6 | REJ | Order rejected |
 | 7 | CXL | Order cancelled |
+| 8 | MOD | Order modified |
+| 9 | CLS | Position closed |
 | 20 | ALG | Algorithm update |
 | 21 | RSK | Risk parameter change |
+| 22 | AUD | Audit request |
 | 98 | HBT | Heartbeat |
 | 99 | ERR | Error |
+| 100 | REC | Recovery |
+| 101 | SNC | Clock sync |
+
+**Additional accepted search names:** `INIT`, `ANC`, `ERR_CONN`, `ERR_AUTH`,
+`ERR_TIMEOUT`, `ERR_REJECT`, `ERR_PARSE`, `ERR_SYNC`, `ERR_RISK`, `ERR_SYSTEM`,
+`ERR_RECOVER`, `ERASURE`, `SYS_RECOVERY_ANNOUNCE`, `SYS_CHECKPOINT`, `SYS_AUDIT`,
+`SYS_ANCHOR_MIGRATION`, and `SYS_ANCHOR_FAILOVER`.
+
+The filter accepts all 27 names in the [fixed VCP v1.2 structured schema](https://github.com/veritaschain/vcp-spec/blob/0315b3e93cd6d96b7d9b3d7513aa43fbe5887849/spec/v1.2/vcp-event-v1.2.json),
+plus the retained legacy fixture names `PRT`, `REJ`, `ALG`, `AUD`, `REC`, and `SNC`.
+This is a 33-name search allowlist, not a replacement VCP registry. The additional
+names have no bundled records and return `200` with `events: []` and `total: 0`.
+No new numeric codes, payloads or successful verification results are inferred.
+Client integrations use `EventSearchType`; existing fixture response types and
+`EVENT_TYPE_CODES` retain their legacy shape.
 
 ### Example Requests
 
 ```bash
-# Track complete transaction by TraceID
+# Filter the available trace records (the returned page is not a completeness proof)
 GET /v1/events?trace_id=01934e3a-6a1b-7c82-9d1b-0987654321dc
 
 # Find all XAUUSD orders in time window
@@ -269,9 +287,9 @@ GET /v1/events/:id
 
 ### Module Structure Explained
 
-- **`header`** (VCP-CORE): Standard event metadata with VCP Spec v1.0 compliance
+- **`header`** (VCP-CORE): Metadata in the legacy demonstration response format
   - `timestamp_int`: STRING to avoid JS 2^53 limit for nanosecond precision
-  - `event_type_code`: Fixed codes per VCP Spec (immutable)
+  - `event_type_code`: Legacy numeric codes retained for the existing fixtures
   - `clock_sync_status`: PTP_LOCKED / NTP_SYNCED / BEST_EFFORT / UNRELIABLE
 
 - **`payload.trade_data`** (VCP-TRADE): Trading-specific data
@@ -283,26 +301,26 @@ GET /v1/events/:id
 
 - **`payload.vcp_gov`** (VCP-GOV): Algorithm governance & AI explainability
   - `algo_id`: Algorithm identifier
-  - `model_hash`: SHA-256 of model parameters (immutable)
+  - `model_hash`: Supplied model-digest field; the API does not recompute or authenticate it
   - `decision_factors`: XAI data (SHAP/LIME values)
-  - `governance`: EU AI Act compliance (risk classification, human approval)
+  - `governance`: Supplied risk-classification and approval metadata; its presence does not establish approval authenticity or EU AI Act compliance
 
-- **`security`** (VCP-SEC): Cryptographic protection
-  - `event_hash`: SHA-256 hash of canonical event
-  - `prev_hash`: Hash chain linkage
-  - `signature`: Ed25519 digital signature (base64)
-  - `merkle_root`: Root of Merkle tree for anchoring
-  - `anchor`: Blockchain anchor point
+- **`security`** (VCP-SEC): Supplied demonstration fields, not verification outcomes
+  - `event_hash`: Supplied event-digest string
+  - `prev_hash`: Supplied predecessor-digest string
+  - `signature`: Supplied base64 signature field; not verified by this route
+  - `merkle_root`: Supplied root-digest string
+  - `anchor`: Supplied anchor metadata; no network lookup or authentication is performed
 
 ---
 
-## 4. Merkle Proof (Verification) 🆕🔐
+## 4. Merkle Proof Fixture
 
 ```http
 GET /v1/events/:id/proof
 ```
 
-**Purpose:** Enable external verification without trusting the API ("Verify, Don't Trust")
+**Purpose:** Return stored demonstration proof fields. This endpoint does not compute or verify inclusion, signatures or external anchoring.
 
 **Path Parameter:**
 - `id` (UUID v7): Event identifier
@@ -329,41 +347,28 @@ GET /v1/events/:id/proof
     "anchored_at": "2025-11-24T14:10:00Z"
   },
   "hash_algo": "SHA256",
-  "verification_hint": "RFC 6962: Compute leaf = SHA256(0x00 || canonical_json), then hash with each audit_path element using SHA256(0x01 || left || right) to match root_hash."
+  "verification_hint": "Unverified demo fixture. Tree size and authenticated anchor evidence are not supplied; this response does not establish Merkle inclusion or external anchoring."
 }
 ```
 
-### Verification Process (RFC 6962)
+### Verification limits
 
-**Step 1: Compute Leaf Hash**
-```
-canonical_event = RFC_8785_canonicalize(event_json)
-leaf_hash = SHA256(0x00 || canonical_event)
-```
+The optional `merkle_proof.tree_size` field is absent from the current fixture.
+Its absence prevents this response from supplying all inputs for an RFC 6962
+inclusion check. Do not derive a tree size from the audit-path length. A proper
+verifier also needs the exact hashed bytes, a specified leaf construction, valid
+index and tree bounds, and index-dependent sibling ordering. `JSON.stringify`
+is not a replacement for RFC 8785 canonicalization, and repeatedly placing each
+sibling on the right is not a general inclusion verifier.
 
-**Step 2: Traverse Audit Path**
-```
-current_hash = leaf_hash
-for sibling_hash in audit_path:
-    current_hash = SHA256(0x01 || current_hash || sibling_hash)
-```
+Even a valid inclusion path is only meaningful relative to its root. Authentication
+of that root, signatures, external anchoring and the recorded content are separate
+checks. This fixture route performs none of them. Its algorithm-name fields do
+not establish that SHA3-256 or BLAKE3 verification is implemented.
 
-**Step 3: Verify Root**
-```
-current_hash == merkle_proof.root_hash
-```
-
-### Hash & Canonicalization
-
-All Merkle proof operations follow **VCP Spec v1.0**:
-- **JSON Canonicalization**: RFC 8785 (JCS)
-- **Hash Algorithm**: Specified in `hash_algo` field
-  - `SHA256` (default)
-  - `SHA3_256` (supported)
-  - `BLAKE3` (supported)
-- **Merkle Tree**: RFC 6962 (Certificate Transparency)
-  - Leaf nodes: `0x00` prefix
-  - Internal nodes: `0x01` prefix
+The optional [SDK evidence demonstration](docs/EVIDENCE_DEMO.md) uses its own
+pinned bundle/trust inputs, algorithms and bounded result contract; enabling it
+does not turn these legacy fixture routes into a conformance verifier.
 
 ---
 
@@ -373,7 +378,7 @@ All Merkle proof operations follow **VCP Spec v1.0**:
 GET /v1/events/:id/certificate
 ```
 
-**Purpose:** Generate regulatory-compliant certificate with all verification data
+**Purpose:** Assemble a demonstration JSON export from an event and its stored proof fixture. The returned tier, signature and anchor fields are not certification or regulatory-compliance findings.
 
 **Path Parameter:**
 - `id` (UUID v7): Event identifier
@@ -445,11 +450,13 @@ GET /v1/events/:id/certificate
 }
 ```
 
-**Use Cases:**
-- Trader proof of legitimate execution
-- Regulatory submission (MiFID II, EU AI Act)
-- Audit trail documentation
-- Dispute resolution evidence
+**Demonstration uses:**
+- Inspect the JSON export structure.
+- Exercise a frontend against fixed sample records.
+- Identify which independent verification inputs a real evidence workflow would need.
+
+The fixture export does not establish a legitimate execution, accepted evidence,
+regulatory compliance or the outcome of a dispute.
 
 ---
 
@@ -490,7 +497,7 @@ GET /health
 {
   "status": "ok",
   "timestamp": "2025-11-24T14:30:00.000Z",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "service": "VCP Explorer API"
 }
 ```
@@ -509,12 +516,12 @@ GET /health
 
 | Code | Error | Description | Example |
 |------|-------|-------------|---------|
-| `400` | `invalid_parameter` | Invalid query parameter | `limit` must be 1-500 |
+| `400` | `invalid_parameter` | Invalid query parameter | `limit` must be one positive decimal safe integer |
 | `400` | `invalid_event_id` | Event ID format invalid | Must be UUID v7 |
 | `400` | `invalid_event_type` | Unknown event type | Valid: SIG, ORD, ACK, EXE, ... |
-| `400` | `invalid_time_range` | Invalid ISO8601 timestamp | Use format: 2025-11-24T00:00:00Z |
+| `400` | `invalid_parameter` | Invalid or reversed RFC3339 time range | Use a valid calendar date and explicit offset |
 | `404` | `not_found` | Resource not found | Event does not exist |
-| `422` | `proof_not_available` | Merkle proof not ready | Event not yet anchored |
+| `404` | `not_found` | No bundled proof/certificate fixture | No availability is inferred from anchor metadata |
 
 ### Server Error Codes
 
@@ -528,7 +535,7 @@ GET /health
 ```json
 {
   "error": "invalid_parameter",
-  "message": "Limit must be a number between 1 and 500"
+  "message": "Limit must be a single unsigned decimal safe integer greater than zero"
 }
 ```
 
@@ -541,13 +548,13 @@ GET /v1/events?event_type=INVALID
 ```json
 {
   "error": "invalid_event_type",
-  "message": "Event type must be one of: SIG, ORD, ACK, EXE, PRT, REJ, CXL, MOD, CLS, ALG, RSK, AUD, HBT, ERR, REC, SNC"
+  "message": "Unsupported event_type value"
 }
 ```
 
 **Event Not Found:**
 ```bash
-GET /v1/events/01934e3a-0000-7000-0000-000000000000
+GET /v1/events/01934e3a-0000-7000-8000-000000000000
 ```
 ```json
 {
@@ -556,14 +563,14 @@ GET /v1/events/01934e3a-0000-7000-0000-000000000000
 }
 ```
 
-**Proof Not Yet Available:**
-```bash
-GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab/proof
+**No Bundled Proof Fixture (HTTP 404):**
+```http
+GET /v1/events/01934e3a-0000-7000-8000-000000000000/proof
 ```
 ```json
 {
-  "error": "proof_not_available",
-  "message": "Merkle proof not available - event not yet anchored"
+  "error": "not_found",
+  "message": "Merkle proof not found for this event"
 }
 ```
 
@@ -578,9 +585,8 @@ GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab/proof
 ### Rate Limits
 - **Default**: 60 requests per minute per IP
 - **Headers**: 
-  - `X-RateLimit-Limit`: Maximum requests allowed
-  - `X-RateLimit-Remaining`: Requests remaining
-  - `X-RateLimit-Reset`: Time when limit resets (Unix timestamp)
+  - `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`: Standard rate-limit metadata
+  - Legacy `X-RateLimit-*` headers are disabled; inspect the runtime response before interpreting reset values.
 
 ### Security Headers (Helmet.js)
 - XSS Protection
@@ -622,7 +628,7 @@ curl http://localhost:3001/health
 ```bash
 npm run dev      # Development with hot-reload
 npm run build    # TypeScript compilation
-npm start        # Production server
+npm start        # Run the compiled reference server
 npm run lint     # ESLint check
 npm run format   # Prettier formatting
 ```

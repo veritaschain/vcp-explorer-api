@@ -4,7 +4,7 @@
 
 import { Router } from 'express';
 import { EventsDataSource } from '../data/events';
-import { EventSearchParams, EVENT_TYPE_CODES } from '../types';
+import { EventSearchParams, isEventSearchType } from '../types';
 import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
 const router = Router();
@@ -85,8 +85,7 @@ router.get('/', async (req, res) => {
     // The runtime guard above already rejects non-string event_type shapes;
     // repeat the type narrowing here so TypeScript can prove the property key.
     const eventType = req.query.event_type;
-    if (typeof eventType === 'string' &&
-        !Object.prototype.hasOwnProperty.call(EVENT_TYPE_CODES, eventType)) {
+    if (typeof eventType === 'string' && !isEventSearchType(eventType)) {
       return res.status(400).json({
         error: 'invalid_event_type',
         message: 'Unsupported event_type value'
@@ -179,8 +178,8 @@ router.get('/:id', async (req, res) => {
 
 /**
  * NEW v1.1: GET /v1/events/:id/proof
- * Merkle Proof取得 - RFC 6962準拠
- * "Verify, Don't Trust" - 外部検証用
+ * 未検証のMerkle proofデモデータを返す（RFC 6962適合を主張しない）。
+ * tree_sizeや外部アンカーの認証証拠がなく、包含検証結果ではない。
  */
 router.get('/:id/proof', async (req, res) => {
   try {
@@ -215,7 +214,7 @@ router.get('/:id/proof', async (req, res) => {
 
 /**
  * NEW v1.1: GET /v1/events/:id/certificate
- * Event Certificate生成 - 規制対応・証明書
+ * デモ用JSONをfixtureから組み立てる。認証や規制適合の判定ではない。
  */
 router.get('/:id/certificate', async (req, res) => {
   try {

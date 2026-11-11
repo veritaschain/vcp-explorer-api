@@ -5,11 +5,13 @@ info:
   description: |
     **VeritasChain Protocol Explorer API v1.1**
     
-    "Verify, Don't Trust" - Merkle Proof Verification & VCP Module Structure
+    Merkle proof fixtures and VCP module structure for local integration review.
 
-    Implementation scope: the current server returns mock data. Some descriptions
-    below describe intended capabilities beyond the implementation. See README.md
-    for actual filters, response differences, and verification limitations.
+    Implementation scope: the routes documented here return mock data. They do
+    not verify signatures, Merkle inclusion, external anchors or certification.
+    The separately configured /v1/evidence-demo service is documented in
+    docs/EVIDENCE_DEMO.md and has its own limited verification contract.
+    See README.md for response differences and remaining documentation gaps.
     
     Demo API returning mock data, with proof and certificate fixtures and search.
     Targets the VCP Specification v1.0 format (superseded by v1.2); conformance
@@ -31,10 +33,8 @@ info:
     url: https://github.com/veritaschain/vcp-explorer-api/blob/main/LICENSE
 
 servers:
-  - url: https://api-explorer.veritaschain.org/v1
-    description: Production server
   - url: http://localhost:3001/v1
-    description: Development server
+    description: Local reference server returning demonstration fixtures
 
 tags:
   - name: System
@@ -102,9 +102,13 @@ paths:
           example: "XAUUSD"
         - name: event_type
           in: query
-          description: Event type filter
+          description: >-
+            Case-sensitive search name from the VCP v1.2 structured registry or
+            the retained legacy fixture vocabulary. Registered names without
+            matching mock records return an empty page; this does not implement
+            their event production, payload rules or verification.
           schema:
-            $ref: '#/components/schemas/EventType'
+            $ref: '#/components/schemas/EventSearchType'
         - name: start_time
           in: query
           description: Inclusive RFC3339 lower bound (UTC Z or numeric offset, 1-9 fractional digits permitted; no leap seconds)
@@ -240,10 +244,10 @@ paths:
         - Verification
       summary: Get Merkle proof
       description: |
-        Returns RFC 6962 compliant Merkle proof for external verification.
-        
-        **"Verify, Don't Trust"** - Enables auditors to verify event 
-        inclusion without trusting the API.
+        Returns stored demonstration proof fields and unverified anchor metadata.
+        The server does not validate RFC 6962 inclusion. Existing fixtures omit
+        tree_size; a client must not infer it from audit-path length or treat
+        this response as sufficient evidence of inclusion or external anchoring.
       operationId: getMerkleProof
       parameters:
         - name: id
@@ -274,10 +278,9 @@ paths:
         - Verification
       summary: Generate event certificate
       description: |
-        Generates a complete regulatory-compliant certificate with 
-        all verification data.
-        
-        **Use cases:** Trader proof, regulatory submission, audit trail.
+        Assembles a demonstration JSON certificate from event and proof fixtures.
+        This is not a cryptographic verification result, regulatory-compliance
+        finding, certification, or proof of legitimate trade execution.
       operationId: getEventCertificate
       parameters:
         - name: id
@@ -726,7 +729,15 @@ components:
               example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
             leaf_index:
               type: integer
+              minimum: 0
               example: 42
+            tree_size:
+              type: integer
+              minimum: 1
+              description: |
+                Optional supplied tree size. The current mock fixture omits it.
+                Absence leaves the inclusion proof incomplete; clients must not
+                invent a size or report verified inclusion from these fields.
             audit_path:
               type: array
               description: Sibling hashes for verification path
@@ -760,8 +771,8 @@ components:
           $ref: '#/components/schemas/HashAlgo'
         verification_hint:
           type: string
-          description: Instructions for manual verification
-          example: "RFC 6962: Compute leaf = SHA256(0x00 || canonical_json), then hash with each audit_path element using SHA256(0x01 || left || right) to match root_hash."
+          description: Limitations of the supplied demonstration data
+          example: "Unverified demo fixture. Tree size and authenticated anchor evidence are not supplied; this response does not establish Merkle inclusion or external anchoring."
 
     EventCertificate:
       type: object
@@ -832,8 +843,51 @@ components:
           example: "2025-Q3"
 
     # Enums
+    EventSearchType:
+      type: string
+      description: >-
+        Search-only union of the VCP v1.2 structured-schema names and the
+        existing legacy fixture names. Numeric codes are not assigned here.
+        Source: https://github.com/veritaschain/vcp-spec/blob/0315b3e93cd6d96b7d9b3d7513aa43fbe5887849/spec/v1.2/vcp-event-v1.2.json
+      enum:
+        - SIG
+        - ORD
+        - ACK
+        - EXE
+        - PRT
+        - REJ
+        - CXL
+        - MOD
+        - CLS
+        - ALG
+        - RSK
+        - AUD
+        - HBT
+        - ERR
+        - REC
+        - SNC
+        - INIT
+        - ANC
+        - ERR_CONN
+        - ERR_AUTH
+        - ERR_TIMEOUT
+        - ERR_REJECT
+        - ERR_PARSE
+        - ERR_SYNC
+        - ERR_RISK
+        - ERR_SYSTEM
+        - ERR_RECOVER
+        - ERASURE
+        - SYS_RECOVERY_ANNOUNCE
+        - SYS_CHECKPOINT
+        - SYS_AUDIT
+        - SYS_ANCHOR_MIGRATION
+        - SYS_ANCHOR_FAILOVER
+      example: "ERASURE"
+
     EventType:
       type: string
+      description: Names present in the legacy fixture response contract; not the complete VCP v1.2 registry.
       enum:
         - SIG  # 1
         - ORD  # 2
