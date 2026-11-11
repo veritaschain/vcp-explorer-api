@@ -129,13 +129,14 @@ export interface EventDetail {
   };
 }
 
-// NEW: Merkle Proof for verification
+// Stored demonstration proof fields; not a verification result.
 export interface MerkleProof {
   event_id: string;
   event_hash: string;
   merkle_proof: {
     root_hash: string;
     leaf_index: number;
+    tree_size?: number; // Missing in current mock fixtures; never infer it from path length.
     audit_path: string[]; // Hashes for verification
   };
   anchor_info: {
@@ -148,7 +149,7 @@ export interface MerkleProof {
   verification_hint: string;
 }
 
-// NEW: Event Certificate for regulatory compliance
+// Demonstration JSON certificate; not certification or a compliance finding.
 export interface EventCertificate {
   event_id: string;
   generated_at: string;

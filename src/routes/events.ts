@@ -179,8 +179,8 @@ router.get('/:id', async (req, res) => {
 
 /**
  * NEW v1.1: GET /v1/events/:id/proof
- * Merkle Proof取得 - RFC 6962準拠
- * "Verify, Don't Trust" - 外部検証用
+ * 未検証のMerkle proofデモデータを返す（RFC 6962適合を主張しない）。
+ * tree_sizeや外部アンカーの認証証拠がなく、包含検証結果ではない。
  */
 router.get('/:id/proof', async (req, res) => {
   try {

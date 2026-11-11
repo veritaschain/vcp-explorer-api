@@ -177,6 +177,11 @@ client integration examples. Some descriptions are ahead of the server:
 - Proof and certificate responses do not establish RFC 6962 validation,
   regulatory compliance, or VCP certification. Integration snippets must be
   checked against the runtime response shapes and the canonical specification.
+- The default proof fixture omits `tree_size`; the optional field in the type
+  and OpenAPI schema does not supply that missing evidence. Do not derive a
+  tree size from path length or treat fixture hashes as authenticated anchors.
+  The OpenAPI server entry is a local reference endpoint, not a supported
+  production-host commitment.
 
 For actual behavior, consult [src/routes/](src/routes/) and
 [src/data/](src/data/). Use the canonical specification when implementing
