@@ -122,7 +122,28 @@ app.use((req, res) => {
 // ====================================
 // Global Error Handler
 // ====================================
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+// Preserve known body-parser client errors without echoing its message/body.
+// Arbitrary errors with a status property still use the generic 500 response.
+const parserErrorStatus = new Map([
+  ['entity.parse.failed', 400],
+  ['querystring.parse.rangeError', 400],
+  ['entity.too.large', 413],
+  ['parameters.too.many', 413],
+  ['charset.unsupported', 415],
+  ['encoding.unsupported', 415]
+]);
+const parserErrorResponses: Record<number, { error: string; message: string }> = {
+  400: { error: 'invalid_body', message: 'Request body could not be parsed' },
+  413: { error: 'payload_too_large', message: 'Request body exceeds the parser limits' },
+  415: { error: 'unsupported_media_type', message: 'Request body charset or encoding is unsupported' }
+};
+app.use((err: Error & { type?: string; status?: number }, _req: express.Request,
+  res: express.Response, _next: express.NextFunction) => {
+  const status = parserErrorStatus.get(err.type ?? '');
+  if (status !== undefined && err.status === status) {
+    res.status(status).json(parserErrorResponses[status]);
+    return;
+  }
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'internal_error',
