@@ -9,6 +9,10 @@ import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
 const router = Router();
 const dataSource = new EventsDataSource();
+const searchQueryFields = new Set([
+  'trace_id', 'symbol', 'event_type', 'start_time', 'end_time',
+  'algo_id', 'venue_id', 'limit', 'offset'
+]);
 
 // undefined means absent (use the existing default); null means invalid.
 // Never coerce arrays/objects, partially parse a string, or round unsafe integers.
@@ -28,6 +32,12 @@ function parsePaginationInteger(value: unknown, minimum: number): number | undef
  */
 router.get('/recent', async (req, res) => {
   try {
+    if (Object.keys(req.query).some(field => field !== 'limit')) {
+      return res.status(400).json({
+        error: 'invalid_parameter',
+        message: 'Recent events supports only the limit query parameter'
+      });
+    }
     const parsedLimit = parsePaginationInteger(req.query.limit, 1);
     if (parsedLimit === null) {
       return res.status(400).json({
@@ -56,6 +66,12 @@ router.get('/recent', async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
+    if (Object.keys(req.query).some(field => !searchQueryFields.has(field))) {
+      return res.status(400).json({
+        error: 'invalid_parameter',
+        message: 'Unsupported event search query parameter'
+      });
+    }
     const limit = parsePaginationInteger(req.query.limit, 1);
     const offset = parsePaginationInteger(req.query.offset, 0);
     if (limit === null || offset === null) {

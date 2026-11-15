@@ -73,7 +73,9 @@ paths:
         Search synthetic event summaries by trace, symbol, event type, venue,
         time window, or algorithm ID. Each supplied filter must be a single
         non-empty scalar string; repeated and nested query parameters are
-        rejected with HTTP 400. Unknown event types are rejected.
+        rejected with HTTP 400. Unknown query parameter names and event
+        types are rejected. event_id and hash are not search filters;
+        use the event detail route for an event ID.
         The algorithm filter matches only detailed mock VCP-GOV algo_id
         fixtures. Summaries with no matching detail are not included.
         Time windows are inclusive and compared to the original event
@@ -178,7 +180,10 @@ paths:
       tags:
         - Events
       summary: Get recent events
-      description: Legacy endpoint for backward compatibility. Use /events for advanced search.
+      description: |
+        Legacy endpoint for backward compatibility. Use /events for advanced
+        search. Only the limit query parameter is supported; unknown query
+        parameter names return HTTP 400 before data access.
       operationId: getRecentEvents
       parameters:
         - name: limit

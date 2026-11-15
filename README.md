@@ -160,11 +160,22 @@ Pagination uses `offset` (default 0) and `limit` (default 50, capped at 500).
 Supplied values must be single unsigned decimal strings within JavaScript's
 safe-integer range: `offset` may be zero, and `limit` must be positive. Invalid
 values return `400 invalid_parameter`; valid limits above 500 are capped.
-These checks apply to the parameters listed here, not every query parameter
-described in the integration documents.
+Search rejects unknown query parameter names with `400 invalid_parameter`
+before querying data. In particular, `event_id` and `hash` are not search
+filters; use `/v1/events/:id` for an event ID. `/v1/events/recent` accepts only
+`limit` and rejects other query names. Supported requests and requests with no
+query parameters retain their existing behavior.
 
 The response `total` is the number of events in the returned page, not a count
 before pagination. Search returns summaries; fetch `/v1/events/:id` for payloads.
+
+The existing JSON/form body parsers return `400 invalid_body` for malformed
+input or excessive form nesting, `413 payload_too_large` for a body or form
+parameter count over their limits, and `415 unsupported_media_type` for an
+unsupported charset or content encoding. Responses contain generic messages,
+without the supplied body or parser diagnostics. These errors occur before
+route selection and do not add POST endpoints. Other runtime errors retain the
+existing `500 internal_error` behavior.
 
 ### Differences from the integration documents
 
