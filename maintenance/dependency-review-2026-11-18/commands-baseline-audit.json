@@ -1,0 +1,43 @@
+[
+  {
+    "label": "baseline-audit-full",
+    "command": [
+      "npm",
+      "audit",
+      "--package-lock-only",
+      "--ignore-scripts",
+      "--json"
+    ],
+    "started_at_utc": "2026-11-17T22:26:04.599823+00:00",
+    "finished_at_utc": "2026-11-17T22:27:08.171108+00:00",
+    "exit_code": 1,
+    "inputs_sha256": {
+      "package.json": "08276ce3bb575ac198491b784b82f66b434559c662d5d196859b86624c88e7cf",
+      "package-lock.json": "15d1d256acaae4cbc21af2347756f87cd24958d93c5b028c9d9d5b6181d9259a"
+    },
+    "inputs_unchanged": true,
+    "npm_registry": "https://registry.npmjs.org/",
+    "npm_config": "distinct empty user/global config files; project config retained"
+  },
+  {
+    "label": "baseline-audit-omit-dev",
+    "command": [
+      "npm",
+      "audit",
+      "--package-lock-only",
+      "--ignore-scripts",
+      "--omit=dev",
+      "--json"
+    ],
+    "started_at_utc": "2026-11-17T22:27:08.171552+00:00",
+    "finished_at_utc": "2026-11-17T22:27:14.498060+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "08276ce3bb575ac198491b784b82f66b434559c662d5d196859b86624c88e7cf",
+      "package-lock.json": "15d1d256acaae4cbc21af2347756f87cd24958d93c5b028c9d9d5b6181d9259a"
+    },
+    "inputs_unchanged": true,
+    "npm_registry": "https://registry.npmjs.org/",
+    "npm_config": "distinct empty user/global config files; project config retained"
+  }
+]

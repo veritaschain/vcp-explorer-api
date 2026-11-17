@@ -1,0 +1,39 @@
+{
+  "reviewed_at_utc": "2026-11-17T22:36:08.892Z",
+  "lock_sha256": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305",
+  "package_script_lint": "eslint src",
+  "effective_config_for": "src/index.ts",
+  "jsx_pascal_case_rule": null,
+  "parser_options": {},
+  "affected_packages": {
+    "picomatch": {
+      "version": "4.0.7",
+      "dev": true
+    },
+    "tinyglobby": {
+      "version": "0.2.17",
+      "dev": true
+    },
+    "fdir": {
+      "version": "6.5.0",
+      "dev": true
+    },
+    "@stylistic/eslint-plugin": {
+      "version": "5.10.0",
+      "dev": true
+    }
+  },
+  "reviewed_source_sha256": {
+    "eslint.config.cjs": "4348eb9de7ce021d7090c18f5911f43035606191154acfd78ca5837b6aef1d9e",
+    "node_modules/@stylistic/eslint-plugin/dist/rules/jsx-pascal-case.js": "62595168ed660df1500d2f3e6192bcb5f7edf2eb533de19929f7eeac497f3c2c",
+    "node_modules/@typescript-eslint/typescript-estree/dist/parseSettings/resolveProjectList.js": "dc8d19209610643184b4395b89a0f5436fd877c82fffb604ef2cbb1b79abb451",
+    "node_modules/tinyglobby/dist/index.cjs": "ee408bbc9665cba5800a6b2a0c89dd3df9820baa30d4ff3ba2f2435f16ce9f94",
+    "node_modules/fdir/dist/index.cjs": "ec92c1fdd78905a7b6d1ea3391aeca2cf19d10e6bbd04db0de158fbfc8b6cff4"
+  },
+  "findings": [
+    "The installed stylistic plugin invokes picomatch for JSX PascalCase ignore patterns; that rule is not enabled for src/index.ts by the effective repository lint configuration.",
+    "typescript-estree resolveProjectList passes configured project glob patterns to tinyglobby; it returns before glob resolution when the normalized project list is empty. The effective repository parser options do not configure project or projectService.",
+    "These packages are development dependencies in the final lock. No remote request input to these development glob patterns was established by this bounded source review.",
+    "This is configuration/input-path evidence, not proof that the advisory is unexploitable. Reassess if lint inputs or config become attacker-controlled, and update when a compatible upstream fix exists."
+  ]
+}

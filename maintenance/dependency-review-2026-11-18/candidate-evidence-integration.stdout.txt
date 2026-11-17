@@ -1,0 +1,69 @@
+
+> vcp-explorer-api@1.1.0 test:evidence
+> node --test test/evidence-demo.integration.cjs
+
+
+✅ VCP Explorer API Server Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Server running on: http://localhost:0
+📡 API Base URL: http://localhost:0/v1/
+🔍 Health Check: http://localhost:0/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Available Endpoints:
+  GET /v1/system/status
+  GET /v1/events/recent?limit=10
+  GET /v1/events/:id
+  GET /v1/certified/entities
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases HTTP/1.1" 200 1198 "-" "node"
+✔ case directory is metadata only; verifier supplies no canned status (32.388896ms)
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/intact/verification HTTP/1.1" 200 10297 "-" "node"
+✔ intact data passes local checks but never claims verified external anchoring (38.171339ms)
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/tampered/verification HTTP/1.1" 200 10779 "-" "node"
+✔ payload tamper invalidates recomputed hash, signature and inclusion (18.220264ms)
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/missing-key/verification HTTP/1.1" 200 10703 "-" "node"
+✔ missing explicit trust remains indeterminate even with intact evidence (3.768726ms)
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/intact/verification HTTP/1.1" 200 10297 "-" "node"
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/tampered/verification HTTP/1.1" 200 10779 "-" "node"
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/missing-key/verification HTTP/1.1" 200 10703 "-" "node"
+✔ raw JSONL and anchor strings preserve exact signed nanosecond integers (29.358469ms)
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/does-not-exist/verification HTTP/1.1" 404 71 "-" "node"
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases/intact/unknown HTTP/1.1" 404 100 "-" "node"
+✔ unknown cases/routes return 404 and do not fall back to an intact fixture (3.728015ms)
+127.0.0.1 - - [17/Nov/2026:22:31:51 +0000] "GET /v1/evidence-demo/cases HTTP/1.1" 200 1198 "-" "node"
+Unhandled error: Error: Not allowed by CORS
+    at origin (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/dist/index.js:41:22)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:328:13)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:346:12)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:280:10)
+    at internalNext (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/helmet/index.cjs:537:6)
+✔ configured exact browser origin works; other origins remain rejected (4.233705ms)
+✔ detached proof metadata is bound to actual event, count, index and root (70.401847ms)
+✔ missing inclusion evidence is reported indeterminate, never silently omitted (12.787585ms)
+✔ malformed proof/trust/JSON and precomputed status fields fail configuration (9.096266ms)
+✔ an unsupported SDK contract is rejected before evidence verification (0.502175ms)
+✔ portable core and Node loader return the identical complete reports and raw evidence (46.390362ms)
+✔ portable core runs without Node globals or module resolution (49.818951ms)
+✔ mutating a returned disclosure or proof cannot change later verification (30.365794ms)
+✔ portable core retains byte limits, strict parsing and explicit trust validation (4.930552ms)
+✔ portable HTTP adapter serves all three actual SDK reports and exact signed text (42.080326ms)
+✔ portable HTTP adapter permits absent/same/exact approved origins and rejects other origins (5.517394ms)
+✔ portable HTTP preflight allows GET/OPTIONS without credentials or arbitrary headers (5.038546ms)
+✔ portable HTTP unknown paths/cases and unsupported methods never read uploaded data (5.29504ms)
+✔ portable HTTP verification exceptions return generic 503 without stale success (13.331895ms)
+✔ portable HTTP copies allowlist/provenance and rejects non-plain transport metadata (4.780396ms)
+✔ partial configuration exits before the HTTP server starts (127.087397ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 776.075292
