@@ -1,0 +1,14 @@
+{
+  "intermediate_lock_sha256": "d351673a5a259096b7a3b6b0b91bae296eb2bce30a6cadd9cd8024ca0e0b3563",
+  "restored_entries": [
+    "node_modules/brace-expansion",
+    "node_modules/semver",
+    "node_modules/brace-expansion/node_modules/balanced-match"
+  ],
+  "removed_new_hoisted_entries": [
+    "node_modules/balanced-match"
+  ],
+  "final_lock_sha256": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305",
+  "changed_entry_count": 15,
+  "reason": "Preserve unrelated compatible dependency versions and existing balanced-match placement before installing/testing final candidate."
+}

@@ -1,0 +1,585 @@
+
+> vcp-explorer-api@1.1.0 test
+> node --test test/*.test.cjs
+
+✔ installation policy blocks lifecycle hooks and inventories the installed lock (216.701347ms)
+✔ offline lifecycle control is blocked, explicit npm script still runs (1027.793937ms)
+ℹ {"blockedInstallHook":true,"explicitScriptRuns":true,"implicitPreScriptBlocked":true,"negativeControlRuns":true,"externalDependencies":0}
+✔ esbuild CLI and sync/async APIs operate with the install hook disabled (166.979891ms)
+ℹ {"version":"0.28.2","cliVersion":"0.28.2","transformedValue":42,"syncAndAsyncMatch":true,"installerOptimizationAbsent":true}
+✖ npm run dev starts and reloads a disposable source copy with hooks disabled (321.630171ms)
+✔ ordinary API needs no SDK, bundle or trust configuration (1.252674ms)
+✔ partial or empty evidence configuration cannot silently fall back to mock (0.68811ms)
+✔ SDK loader accepts local absolute files only (0.30067ms)
+✔ optional CORS configuration is one exact origin and requires the demo (0.562071ms)
+
+✅ VCP Explorer API Server Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Server running on: http://localhost:0
+📡 API Base URL: http://localhost:0/v1/
+🔍 Health Check: http://localhost:0/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Available Endpoints:
+  GET /v1/system/status
+  GET /v1/events/recent?limit=10
+  GET /v1/events/:id
+  GET /v1/certified/entities
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /health HTTP/1.1" 200 101 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET / HTTP/1.1" 200 279 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/system/status HTTP/1.1" 200 268 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/certified/entities HTTP/1.1" 200 1340 "-" "node"
+✔ compiled server serves health, metadata, system and entity endpoints (55.240902ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=2 HTTP/1.1" 200 439 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=-1 HTTP/1.1" 400 112 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?symbol=XAUUSD&event_type=ORD&limit=1 HTTP/1.1" 200 292 "-" "node"
+✔ recent and filtered search responses preserve pagination and fixture fields (19.199155ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab HTTP/1.1" 200 2012 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?trace_id=01934e3a-6a1b-7c82-9d1b-0987654321dc HTTP/1.1" 200 295 "-" "node"
+✔ detail export and HTTP detail use one fixture with precision-safe timestamps (13.275335ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab HTTP/1.1" 200 2012 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab/proof HTTP/1.1" 200 844 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab/certificate HTTP/1.1" 200 2663 "-" "node"
+✔ proof and certificate routes retain demo response consistency (21.968348ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/invalid HTTP/1.1" 400 80 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-000000000000 HTTP/1.1" 404 49 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/invalid/proof HTTP/1.1" 400 80 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-000000000000/proof HTTP/1.1" 404 71 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/invalid/certificate HTTP/1.1" 400 80 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-000000000000/certificate HTTP/1.1" 404 80 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /missing HTTP/1.1" 404 70 "-" "node"
+✔ detail, proof and certificate routes return explicit 400 and 404 responses (19.805452ms)
+Error fetching event: Error: test data source failure
+    at EventsDataSource.getEventById (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/test/http.test.cjs:73:65)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/dist/routes/events.js:139:40
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:284:15
+    at param (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:365:14)
+    at param (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:376:14)
+    at router.process_params (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:421:3)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/01934e3a-7b2c-7f93-8f2a-1234567890ab HTTP/1.1" 500 68 "-" "node"
+✔ route failures return JSON 500 responses (3.230011ms)
+Unhandled error: Error: Not allowed by CORS
+    at origin (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/dist/index.js:41:22)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/cors/lib/index.js:219:13
+    at optionsCallback (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/cors/lib/index.js:199:9)
+    at corsMiddleware (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/cors/lib/index.js:204:7)
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:328:13)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:286:9
+    at router.process_params (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:346:12)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:280:10)
+    at internalNext (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/helmet/index.cjs:537:6)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /health HTTP/1.1" 200 101 "-" "node"
+✔ four-argument Express error handler still handles CORS failures (4.403046ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 429 139 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /health HTTP/1.1" 200 101 "-" "node"
+✔ rate limit produces 429 with a reset timestamp while health remains available (74.873418ms)
+✔ lint policy covers every TypeScript source file and preserves baseline active severities (1261.832352ms)
+✔ lint fixture: typed-export (1.548175ms)
+✔ lint fixture: underscore-argument-allowed (1.278482ms)
+✔ lint fixture: node-globals (1.128037ms)
+✔ lint fixture: type-only-export (1.044492ms)
+✔ lint fixture: unused-local (2.014373ms)
+✔ lint fixture: unused-argument (1.454446ms)
+✔ lint fixture: underscore-local-not-exempt (1.046686ms)
+✔ lint fixture: explicit-any (1.445142ms)
+✔ lint fixture: debugger (1.466503ms)
+✔ lint fixture: var-declaration (1.650549ms)
+✔ lint fixture: prefer-const (1.373865ms)
+✔ lint fixture: async-promise-executor (1.416899ms)
+✔ lint fixture: unused-expression (1.261077ms)
+✔ lint fixture: ts-ignore-comment (1.035078ms)
+✔ lint fixture: extra-semicolon (1.368447ms)
+✔ lint fixture: mixed-indentation (1.070722ms)
+✔ lint fixture: nested-block-function (1.404811ms)
+✔ lint fixture: constant-while-condition (1.735516ms)
+
+✅ VCP Explorer API Server Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Server running on: http://localhost:0
+📡 API Base URL: http://localhost:0/v1/
+🔍 Health Check: http://localhost:0/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Available Endpoints:
+  GET /v1/system/status
+  GET /v1/events/recent?limit=10
+  GET /v1/events/:id
+  GET /v1/certified/entities
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit= HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: empty (68.171702ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=abc HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: letters (22.966431ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=2junk HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: suffix (12.446997ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=1.5 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: fraction (9.219741ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=-1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: negative (20.434343ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=0 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: zero (3.192405ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=1e2 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: exponent (3.374207ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=0x10 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: hexadecimal (7.493497ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=%201 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: whitespace (10.702969ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=%2B1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: plus-sign (8.527795ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=9007199254740992 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: unsafe-integer (17.524631ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=1&limit=2 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: repeated (12.083764ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit[]=1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: array (12.279917ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit[page]=1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects recent limit: object (1.830007ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit= HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: empty (2.609533ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=abc HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: letters (1.51767ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=2junk HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: suffix (5.967606ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=1.5 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: fraction (1.55786ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=-1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: negative (5.766394ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=0 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: zero (1.459222ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=1e2 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: exponent (1.125143ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=0x10 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: hexadecimal (1.224652ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=%201 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: whitespace (1.502678ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=%2B1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: plus-sign (1.354405ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=9007199254740992 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: unsafe-integer (1.287405ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=1&limit=2 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: repeated (1.399222ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit[]=1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: array (1.436815ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit[page]=1 HTTP/1.1" 400 112 "-" "node"
+✔ pagination rejects search limit: object (1.83873ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset= HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: empty (1.940102ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=abc HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: letters (3.679333ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=2junk HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: suffix (1.954423ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=1.5 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: fraction (1.391401ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=-1 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: negative (1.665771ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=1e2 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: exponent (1.206465ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=0x10 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: hexadecimal (1.093456ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=%201 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: whitespace (1.820403ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=%2B1 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: plus-sign (1.252484ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=9007199254740992 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: unsafe-integer (1.48377ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=1&offset=2 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: repeated (1.948965ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset[]=1 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: array (1.318662ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset[page]=1 HTTP/1.1" 400 125 "-" "node"
+✔ pagination rejects search offset: object (1.360926ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=1 HTTP/1.1" 200 225 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=002 HTTP/1.1" 200 439 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=100 HTTP/1.1" 200 2103 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=101 HTTP/1.1" 200 2103 "-" "node"
+✔ recent pagination preserves missing defaults, decimal leading zeros and legacy cap (8.704009ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events HTTP/1.1" 200 2125 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=2&offset=1 HTTP/1.1" 200 471 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=0 HTTP/1.1" 200 2135 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=002&offset=01 HTTP/1.1" 200 471 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=500 HTTP/1.1" 200 2136 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=501 HTTP/1.1" 200 2136 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?limit=9007199254740991 HTTP/1.1" 200 2149 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?offset=9007199254740991 HTTP/1.1" 200 59 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?symbol=XAUUSD&event_type=ORD&limit=1 HTTP/1.1" 200 292 "-" "node"
+✔ search pagination preserves filtering, response query, defaults and legacy cap (11.297157ms)
+Error fetching recent events: Error: test-only data source failure
+    at EventsDataSource.<computed> (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/test/pagination.test.cjs:126:62)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/dist/routes/events.js:38:41
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:284:15
+    at router.process_params (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:346:12)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:280:10)
+    at router.handle (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:175:3)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent HTTP/1.1" 500 68 "-" "node"
+✔ genuine getRecentEvents errors remain JSON 500, not pagination 400 (2.131829ms)
+Error searching events: Error: test-only data source failure
+    at EventsDataSource.<computed> (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/test/pagination.test.cjs:126:62)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/dist/routes/events.js:114:41
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/layer.js:95:5)
+    at /workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:284:15
+    at router.process_params (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:346:12)
+    at next (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:280:10)
+    at router.handle (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/express/lib/router/index.js:175:3)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events HTTP/1.1" 500 62 "-" "node"
+✔ genuine searchEvents errors remain JSON 500, not pagination 400 (1.958569ms)
+
+✅ VCP Explorer API Server Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Server running on: http://localhost:0
+📡 API Base URL: http://localhost:0/v1/
+🔍 Health Check: http://localhost:0/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Available Endpoints:
+  GET /v1/system/status
+  GET /v1/events/recent?limit=10
+  GET /v1/events/:id
+  GET /v1/certified/entities
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?event_id=01934e3a-7b2c-7f93-8f2a-1234567890ab HTTP/1.1" 400 82 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events?event_id=01934e3a-7b2c-7f93-8f2a-1234567890ab (50.42548ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?hash=abc123 HTTP/1.1" 400 82 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events?hash=abc123 (6.051551ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?traceId=unknown HTTP/1.1" 400 82 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events?traceId=unknown (3.721806ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?symbol=XAUUSD&event_id=unknown HTTP/1.1" 400 82 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events?symbol=XAUUSD&event_id=unknown (3.269129ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?hash[]=abc123 HTTP/1.1" 400 82 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events?hash[]=abc123 (7.332768ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?hash[value]=abc123 HTTP/1.1" 400 82 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events?hash[value]=abc123 (3.383792ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?offset=10 HTTP/1.1" 400 95 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events/recent?offset=10 (2.636193ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?symbol=XAUUSD HTTP/1.1" 400 95 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events/recent?symbol=XAUUSD (2.415343ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=1&limt=2 HTTP/1.1" 400 95 "-" "node"
+✔ unsupported query is rejected before data access: /v1/events/recent?limit=1&limt=2 (3.200286ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 400 69 "-" "node"
+✔ malformed JSON preserves the parser client-error status and hides request data (19.172456ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 413 80 "-" "node"
+✔ oversized JSON preserves the parser client-error status and hides request data (14.816381ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 413 80 "-" "node"
+✔ oversized form preserves the parser client-error status and hides request data (3.322129ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 413 80 "-" "node"
+✔ too many form parameters preserves the parser client-error status and hides request data (2.527651ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 400 69 "-" "node"
+✔ excessively nested form preserves the parser client-error status and hides request data (2.006251ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 415 94 "-" "node"
+✔ unsupported JSON charset preserves the parser client-error status and hides request data (2.405728ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 415 94 "-" "node"
+✔ unsupported form charset preserves the parser client-error status and hides request data (1.921604ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 415 94 "-" "node"
+✔ unsupported content encoding preserves the parser client-error status and hides request data (2.017707ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events HTTP/1.1" 200 2125 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?symbol=XAUUSD&limit=1 HTTP/1.1" 200 273 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events/recent?limit=2 HTTP/1.1" 200 439 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "POST /health HTTP/1.1" 404 69 "-" "node"
+✔ valid requests retain defaults, supported filters and unsupported-method behavior (7.884733ms)
+
+✅ VCP Explorer API Server Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Server running on: http://localhost:0
+📡 API Base URL: http://localhost:0/v1/
+🔍 Health Check: http://localhost:0/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Available Endpoints:
+  GET /v1/system/status
+  GET /v1/events/recent?limit=10
+  GET /v1/events/:id
+  GET /v1/certified/entities
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?trace_id=alpha&trace_id=beta HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty trace_id (duplicate) before consulting data source (35.018132ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?trace_id[]=alpha HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty trace_id (bracket-array) before consulting data source (9.198008ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?trace_id[nested]=alpha HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty trace_id (bracket-object) before consulting data source (2.455302ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?trace_id= HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty trace_id (empty) before consulting data source (2.29322ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?symbol=alpha&symbol=beta HTTP/1.1" 400 77 "-" "node"
+✔ search rejects non-scalar/empty symbol (duplicate) before consulting data source (1.843978ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?symbol[]=alpha HTTP/1.1" 400 77 "-" "node"
+✔ search rejects non-scalar/empty symbol (bracket-array) before consulting data source (1.636538ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?symbol[nested]=alpha HTTP/1.1" 400 77 "-" "node"
+✔ search rejects non-scalar/empty symbol (bracket-object) before consulting data source (1.687814ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?symbol= HTTP/1.1" 400 77 "-" "node"
+✔ search rejects non-scalar/empty symbol (empty) before consulting data source (1.486644ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=alpha&event_type=beta HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty event_type (duplicate) before consulting data source (1.742296ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type[]=alpha HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty event_type (bracket-array) before consulting data source (1.794934ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type[nested]=alpha HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty event_type (bracket-object) before consulting data source (1.373534ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type= HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty event_type (empty) before consulting data source (1.035339ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?start_time=alpha&start_time=beta HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty start_time (duplicate) before consulting data source (1.14337ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?start_time[]=alpha HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty start_time (bracket-array) before consulting data source (1.01606ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?start_time[nested]=alpha HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty start_time (bracket-object) before consulting data source (1.553524ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?start_time= HTTP/1.1" 400 81 "-" "node"
+✔ search rejects non-scalar/empty start_time (empty) before consulting data source (1.102209ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?end_time=alpha&end_time=beta HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty end_time (duplicate) before consulting data source (1.267406ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?end_time[]=alpha HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty end_time (bracket-array) before consulting data source (0.95642ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?end_time[nested]=alpha HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty end_time (bracket-object) before consulting data source (0.9492ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?end_time= HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty end_time (empty) before consulting data source (1.095409ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id=alpha&algo_id=beta HTTP/1.1" 400 78 "-" "node"
+✔ search rejects non-scalar/empty algo_id (duplicate) before consulting data source (1.08271ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id[]=alpha HTTP/1.1" 400 78 "-" "node"
+✔ search rejects non-scalar/empty algo_id (bracket-array) before consulting data source (0.948218ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id[nested]=alpha HTTP/1.1" 400 78 "-" "node"
+✔ search rejects non-scalar/empty algo_id (bracket-object) before consulting data source (0.885344ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id= HTTP/1.1" 400 78 "-" "node"
+✔ search rejects non-scalar/empty algo_id (empty) before consulting data source (0.991203ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?venue_id=alpha&venue_id=beta HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty venue_id (duplicate) before consulting data source (0.927347ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?venue_id[]=alpha HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty venue_id (bracket-array) before consulting data source (0.919725ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?venue_id[nested]=alpha HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty venue_id (bracket-object) before consulting data source (0.908439ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?venue_id= HTTP/1.1" 400 79 "-" "node"
+✔ search rejects non-scalar/empty venue_id (empty) before consulting data source (0.909771ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=INVALID HTTP/1.1" 400 71 "-" "node"
+✔ unknown event_type INVALID returns 400 before data access (1.078163ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ord HTTP/1.1" 400 71 "-" "node"
+✔ unknown event_type ord returns 400 before data access (1.053726ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=__proto__ HTTP/1.1" 400 71 "-" "node"
+✔ unknown event_type __proto__ returns 400 before data access (0.970932ms)
+✔ search vocabulary matches the pinned registry across server, client and OpenAPI without assigning new codes (79.810878ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=INIT HTTP/1.1" 200 53 "-" "node"
+✔ registered INIT search is accepted with an empty page and no invented fixture (5.621718ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ANC HTTP/1.1" 200 52 "-" "node"
+✔ registered ANC search is accepted with an empty page and no invented fixture (1.72495ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_CONN HTTP/1.1" 200 57 "-" "node"
+✔ registered ERR_CONN search is accepted with an empty page and no invented fixture (1.433595ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_AUTH HTTP/1.1" 200 57 "-" "node"
+✔ registered ERR_AUTH search is accepted with an empty page and no invented fixture (1.612141ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_TIMEOUT HTTP/1.1" 200 60 "-" "node"
+✔ registered ERR_TIMEOUT search is accepted with an empty page and no invented fixture (1.900793ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_REJECT HTTP/1.1" 200 59 "-" "node"
+✔ registered ERR_REJECT search is accepted with an empty page and no invented fixture (1.222208ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_PARSE HTTP/1.1" 200 58 "-" "node"
+✔ registered ERR_PARSE search is accepted with an empty page and no invented fixture (1.284431ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_SYNC HTTP/1.1" 200 57 "-" "node"
+✔ registered ERR_SYNC search is accepted with an empty page and no invented fixture (1.129068ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_RISK HTTP/1.1" 200 57 "-" "node"
+✔ registered ERR_RISK search is accepted with an empty page and no invented fixture (1.373364ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_SYSTEM HTTP/1.1" 200 59 "-" "node"
+✔ registered ERR_SYSTEM search is accepted with an empty page and no invented fixture (1.482487ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERR_RECOVER HTTP/1.1" 200 60 "-" "node"
+✔ registered ERR_RECOVER search is accepted with an empty page and no invented fixture (1.56401ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=ERASURE HTTP/1.1" 200 56 "-" "node"
+✔ registered ERASURE search is accepted with an empty page and no invented fixture (1.602998ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=SYS_RECOVERY_ANNOUNCE HTTP/1.1" 200 70 "-" "node"
+✔ registered SYS_RECOVERY_ANNOUNCE search is accepted with an empty page and no invented fixture (1.386864ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=SYS_CHECKPOINT HTTP/1.1" 200 63 "-" "node"
+✔ registered SYS_CHECKPOINT search is accepted with an empty page and no invented fixture (1.308387ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=SYS_AUDIT HTTP/1.1" 200 58 "-" "node"
+✔ registered SYS_AUDIT search is accepted with an empty page and no invented fixture (1.424541ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=SYS_ANCHOR_MIGRATION HTTP/1.1" 200 69 "-" "node"
+✔ registered SYS_ANCHOR_MIGRATION search is accepted with an empty page and no invented fixture (1.198312ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=SYS_ANCHOR_FAILOVER HTTP/1.1" 200 68 "-" "node"
+✔ registered SYS_ANCHOR_FAILOVER search is accepted with an empty page and no invented fixture (1.193435ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id=neural-scalper-v1.2 HTTP/1.1" 200 277 "-" "node"
+✔ algo_id searches VCP-GOV detailed fixtures, not every summary (1.623128ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id=not-in-fixture HTTP/1.1" 200 60 "-" "node"
+✔ unknown algorithm ID returns no match, not unfiltered data (1.467885ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id=neural-scalper-v1.2&symbol=XAUUSD&event_type=ORD HTTP/1.1" 200 314 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?algo_id=neural-scalper-v1.2&symbol=EURUSD HTTP/1.1" 200 83 "-" "node"
+✔ algo_id intersects with symbol and event type (2.854699ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?event_type=MOD HTTP/1.1" 200 52 "-" "node"
+✔ valid known event type without fixtures yields empty result (1.175007ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events? HTTP/1.1" 200 2125 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:45 +0000] "GET /v1/events?venue_id=XNAS HTTP/1.1" 200 665 "-" "node"
+✔ unfiltered and venue filters preserve existing response structure (1.81849ms)
+✔ style migration preserves a fixed legacy corpus and removes active deprecated rules (462.076922ms)
+✔ style rule parity: typed-statement (4.810514ms)
+✔ style rule parity: extra-statement (4.684046ms)
+✔ style rule parity: function-normal (2.569754ms)
+✔ style rule parity: function-extra (3.692142ms)
+✔ style rule parity: class-normal (3.767094ms)
+✔ style rule parity: class-extra (4.116006ms)
+✔ style rule parity: empty-for-body (3.966162ms)
+✔ style rule parity: empty-while-body (2.492357ms)
+✔ style rule parity: empty-if-body (4.422024ms)
+✔ style rule parity: directive-fix-safety (4.78045ms)
+✔ style rule parity: multiple-extra (7.933176ms)
+✔ style rule parity: comment-extra (5.479836ms)
+✔ style rule parity: spaces-only (4.423076ms)
+✔ style rule parity: tabs-only (4.300072ms)
+✔ style rule parity: space-tab (4.599889ms)
+✔ style rule parity: tab-space (4.549955ms)
+✔ style rule parity: nested-mixed (4.573751ms)
+✔ style rule parity: mixed-blank-line (4.298409ms)
+✔ style rule parity: mixed-line-comment (4.531318ms)
+✔ style rule parity: mixed-block-comment (4.03164ms)
+✔ style rule parity: template-literal-content (4.096467ms)
+✔ style rule parity: mixed-crlf (4.88708ms)
+✔ style rule parity: string-tab-content (4.201013ms)
+✔ style rule parity: multiple-mixed-lines (4.816233ms)
+
+✅ VCP Explorer API Server Started
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Server running on: http://localhost:0
+📡 API Base URL: http://localhost:0/v1/
+🔍 Health Check: http://localhost:0/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Available Endpoints:
+  GET /v1/system/status
+  GET /v1/events/recent?limit=10
+  GET /v1/events/:id
+  GET /v1/certified/entities
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.123456789Z&end_time=2025-11-24T14%3A02%3A05.123456789Z HTTP/1.1" 200 335 "-" "node"
+✔ nanosecond-exact inclusive start/end matches the first event only (73.104682ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?end_time=2025-11-24T14%3A02%3A05.123456788Z HTTP/1.1" 200 77 "-" "node"
+✔ one nanosecond before the first event excludes it (12.229611ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.123456790Z HTTP/1.1" 200 1956 "-" "node"
+✔ one nanosecond after the first event excludes it from start boundary (6.289267ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.123456790Z&end_time=2025-11-24T14%3A02%3A05.223456788Z HTTP/1.1" 200 123 "-" "node"
+✔ a non-inclusive gap in a single millisecond has zero events (5.23521ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T23%3A02%3A05.123456789%2B09%3A00&end_time=2025-11-24T23%3A02%3A05.123456789%2B09%3A00 HTTP/1.1" 200 345 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T09%3A02%3A05.123456789-05%3A00&end_time=2025-11-24T09%3A02%3A05.123456789-05%3A00 HTTP/1.1" 200 345 "-" "node"
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.123456789%2B00%3A00&end_time=2025-11-24T14%3A02%3A05.123456789%2B00%3A00 HTTP/1.1" 200 345 "-" "node"
+✔ RFC3339 offsets normalize to the same absolute nanosecond (14.665626ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.12345678Z&end_time=2025-11-24T14%3A02%3A05.123456789Z HTTP/1.1" 200 334 "-" "node"
+✔ shorter fractions are right-padded rather than rounded to milliseconds (4.387882ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.123456789Z&end_time=2025-11-24T14%3A02%3A06.023456789Z HTTP/1.1" 200 2214 "-" "node"
+✔ a full nanosecond range preserves event ordering and the original timestamp strings (4.936634ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2024-02-29T23%3A59%3A59Z&end_time=2024-02-29T23%3A59%3A59Z HTTP/1.1" 200 103 "-" "node"
+✔ valid leap-day date is accepted, yielding an empty historical result (3.013587ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=not-a-date HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: not-a-date (3.669699ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-02-29T10%3A00%3A00Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: invalid leap day (10.16189ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-04-31T10%3A00%3A00Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: invalid April day (2.260651ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-13-01T10%3A00%3A00Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: invalid month (1.616047ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T24%3A00%3A00Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: 24th hour (1.588786ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A60%3A00Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: invalid minute (1.610098ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A60Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: leap-second outside supported syntax (1.587314ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.1234567890Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: ten fractional digits (1.69188ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05%2B24%3A00 HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: offset hour 24 (1.313965ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05%2B00%3A60 HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: offset minute 60 (1.374416ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05 HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: timezone omitted (1.391581ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?end_time=no-date HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: invalid end (1.637679ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A03%3A00Z&end_time=2025-11-24T14%3A02%3A00Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: reversed whole seconds (1.631681ms)
+::ffff:127.0.0.1 - - [17/Nov/2026:22:31:44 +0000] "GET /v1/events?start_time=2025-11-24T14%3A02%3A05.123456790Z&end_time=2025-11-24T14%3A02%3A05.123456789Z HTTP/1.1" 400 131 "-" "node"
+✔ time filter returns 400 before data access: reversed nanoseconds in same millisecond (1.33688ms)
+ℹ tests 199
+ℹ suites 0
+ℹ pass 198
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6827.228374
+
+✖ failing tests:
+
+test at test/dev-install-policy.test.cjs:124:1
+✖ npm run dev starts and reloads a disposable source copy with hooks disabled (321.630171ms)
+  Error: dev exited early: npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+  
+  > vcp-explorer-api@1.1.0 dev
+  > tsx watch src/index.ts
+  
+  node:net:2368
+        const error = new UVExceptionWithHostPort(rval, 'listen', address, port);
+                      ^
+  
+  Error: listen EPERM: operation not permitted /tmp/tsx-1000/293.pipe
+      at Server.setupListenHandle [as _listen2] (node:net:2368:21)
+      at listenInCluster (node:net:2499:12)
+      at Server.listen (node:net:2641:5)
+      at file:///workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/tsx/dist/cli.mjs:53:32174
+      at new Promise (<anonymous>)
+      at createIpcServer (file:///workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/tsx/dist/cli.mjs:53:32152)
+      at async file:///workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/node_modules/tsx/dist/cli.mjs:53:34061 {
+    code: 'EPERM',
+    errno: -1,
+    syscall: 'listen',
+    address: '/tmp/tsx-1000/293.pipe',
+    port: -1
+  }
+  
+  Node.js v24.22.1
+  
+      at waitForService (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/test/dev-install-policy.test.cjs:156:73)
+      at async TestContext.<anonymous> (/workspace/scratch/e4061c350564/audit/continuation/vcp-explorer-api/test/dev-install-policy.test.cjs:167:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

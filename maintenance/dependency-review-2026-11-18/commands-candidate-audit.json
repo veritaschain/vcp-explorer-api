@@ -1,0 +1,43 @@
+[
+  {
+    "label": "candidate-audit-full",
+    "command": [
+      "npm",
+      "audit",
+      "--package-lock-only",
+      "--ignore-scripts",
+      "--json",
+      "--fetch-retries=0",
+      "--fetch-timeout=30000"
+    ],
+    "started_at_utc": "2026-11-17T22:31:34.041581+00:00",
+    "finished_at_utc": "2026-11-17T22:32:36.973031+00:00",
+    "exit_code": 1,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  },
+  {
+    "label": "candidate-audit-omit-dev",
+    "command": [
+      "npm",
+      "audit",
+      "--package-lock-only",
+      "--ignore-scripts",
+      "--json",
+      "--fetch-retries=0",
+      "--fetch-timeout=30000",
+      "--omit=dev"
+    ],
+    "started_at_utc": "2026-11-17T22:32:36.973592+00:00",
+    "finished_at_utc": "2026-11-17T22:32:42.881541+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  }
+]

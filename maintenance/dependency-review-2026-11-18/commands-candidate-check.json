@@ -1,0 +1,106 @@
+[
+  {
+    "label": "candidate-install",
+    "command": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund",
+      "--fetch-retries=0",
+      "--fetch-timeout=30000"
+    ],
+    "started_at_utc": "2026-11-17T22:31:32.651221+00:00",
+    "finished_at_utc": "2026-11-17T22:31:40.773578+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  },
+  {
+    "label": "candidate-lint",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "started_at_utc": "2026-11-17T22:31:40.774214+00:00",
+    "finished_at_utc": "2026-11-17T22:31:42.021003+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  },
+  {
+    "label": "candidate-type-check",
+    "command": [
+      "npm",
+      "run",
+      "type-check"
+    ],
+    "started_at_utc": "2026-11-17T22:31:42.021651+00:00",
+    "finished_at_utc": "2026-11-17T22:31:43.234253+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  },
+  {
+    "label": "candidate-build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "started_at_utc": "2026-11-17T22:31:43.234805+00:00",
+    "finished_at_utc": "2026-11-17T22:31:44.272629+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  },
+  {
+    "label": "candidate-tests",
+    "command": [
+      "npm",
+      "test"
+    ],
+    "started_at_utc": "2026-11-17T22:31:44.277220+00:00",
+    "finished_at_utc": "2026-11-17T22:31:51.304063+00:00",
+    "exit_code": 1,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true
+  },
+  {
+    "label": "candidate-evidence-integration",
+    "command": [
+      "npm",
+      "run",
+      "test:evidence"
+    ],
+    "started_at_utc": "2026-11-17T22:31:51.305212+00:00",
+    "finished_at_utc": "2026-11-17T22:31:52.292561+00:00",
+    "exit_code": 0,
+    "inputs_sha256": {
+      "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+      "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+    },
+    "inputs_unchanged": true,
+    "sdk_commit": "eb8df265a09f2415154de2ae2a617bb502c558d2",
+    "evidence_environment": {
+      "VCP_EVIDENCE_SDK_MODULE": "/workspace/scratch/e4061c350564/audit/continuation/api-sdk-pinned/typescript/dist/index.js",
+      "VCP_EVIDENCE_BUNDLE": "/workspace/scratch/e4061c350564/audit/continuation/api-sdk-pinned/examples/explorer-demo/bundle.json",
+      "VCP_EVIDENCE_TRUST": "/workspace/scratch/e4061c350564/audit/continuation/api-sdk-pinned/examples/explorer-demo/trust.json"
+    }
+  }
+]

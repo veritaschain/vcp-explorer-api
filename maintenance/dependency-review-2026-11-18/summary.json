@@ -1,0 +1,97 @@
+{
+  "observed_at_utc": "2026-11-17T22:36:55.549297+00:00",
+  "review_date_jst": "2026-11-18",
+  "base_commit": "e9c59d7ce842ceff83b97731ecb58316808bc3ab",
+  "branch": "audit/2026-11-18-api-continuation",
+  "node": "v24.22.1",
+  "npm": "11.9.0",
+  "candidate_inputs_sha256": {
+    "package.json": "2f517285c08410c4816087cb88766bfb5c9eda4ec533a811f0f909c6889f2fa5",
+    "package-lock.json": "b7fd12ebed3569be041a320fc721233b54fe3fab8ff1c377e2e9ba94acc92305"
+  },
+  "scope": {
+    "parsed_lock_entries_changed": 15,
+    "package_entries_changed_or_added": 14,
+    "runtime_lock_entries_changed": [],
+    "application_source_changed": false,
+    "lint_config_or_baselines_changed": false,
+    "overrides_added": false,
+    "audit_suppressions_added": false
+  },
+  "audit": {
+    "baseline_all": {
+      "info": 0,
+      "low": 0,
+      "moderate": 7,
+      "high": 5,
+      "critical": 0,
+      "total": 12
+    },
+    "candidate_all": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 9,
+      "critical": 0,
+      "total": 9
+    },
+    "baseline_omit_dev": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "candidate_omit_dev": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "baseline_advisory_urls": [
+      "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+      "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+    ],
+    "candidate_advisory_urls": [
+      "https://github.com/advisories/GHSA-fc5q-39xc-vjpf"
+    ],
+    "remaining_advisory_status": "Open; no patched picomatch version listed in GHSA-fc5q-39xc-vjpf at this observation. Package-entry severity totals are not distinct advisory counts."
+  },
+  "validation": {
+    "npm_ci": "pass",
+    "lint": "pass",
+    "type_check": "pass",
+    "build": "pass",
+    "npm_test": {
+      "total": 199,
+      "passed": 198,
+      "failed": 1,
+      "skipped": 0,
+      "limitation": "Existing dev-watch test cannot bind tsx Unix-domain IPC listener: listen EPERM /tmp/tsx-1000/293.pipe. Test retained unchanged; hosted CI required."
+    },
+    "pinned_sdk_integration": {
+      "sdk_commit": "eb8df265a09f2415154de2ae2a617bb502c558d2",
+      "total": 22,
+      "passed": 22,
+      "failed": 0
+    },
+    "selected_ranges": {
+      "total": 98,
+      "satisfied": 98
+    },
+    "registry_metadata": {
+      "total": 14,
+      "matched": 14,
+      "scope": "version, dependencies, peers, engines, tarball URL and integrity; not signature verification"
+    },
+    "dist": {
+      "files": 60,
+      "all_paths_and_sha256_identical": true
+    }
+  },
+  "deployment_changed": false,
+  "hosting_issue_26_closed": false
+}
