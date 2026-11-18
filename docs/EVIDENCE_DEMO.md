@@ -19,6 +19,22 @@ real-world identity. Evidence and trust are separate files; no key in the
 evidence bundle is automatically trusted. The API does not accept arbitrary
 uploaded evidence, keys or caller-provided success results through these routes.
 
+## If the public demo is unavailable
+
+The published [synthetic demo endpoint](https://veritaschain-evidence-demo.kamimura0000.chatgpt.site/health)
+is optional. The [hosting and continuity issue](https://github.com/veritaschain/vcp-explorer-api/issues/26)
+records dated observations and open decisions about host access rules and continued availability.
+No production availability commitment is documented there. The application-level
+HTTP contract below does not establish how the hosting provider will treat a request.
+
+A timeout or an HTTP error means that no verification result was obtained from
+that request. Do not report it as an `INVALID` proof. To continue with the
+published example, **choose offline replay explicitly**:
+
+1. Prepare the [reviewed SDK checkout](https://github.com/veritaschain/vcp-sdk/tree/0832f1d84af9b130db6a17d36c343a8abd7002a8). Follow its [offline replay guide](https://github.com/veritaschain/vcp-sdk/blob/0832f1d84af9b130db6a17d36c343a8abd7002a8/docs/EXPLORER_REPLAY_CLI.md) to install dependencies and build once.
+2. From the SDK checkout, run `node tools/replay_explorer_demo.mjs` for the bundled synthetic cases. If you already saved a **complete** demo verification response, run `node tools/replay_explorer_demo.mjs --api-response ./complete-api-response.json --json` instead. Both use separately selected local trust and require no network after setup.
+3. Record which input you used. The checked-in fixture demonstrates the expected case; it does not recover a missing HTTP response or establish the service's availability. A saved response can be compared with a fresh local result, but replay does not authenticate the deployed server.
+
 ## Local setup
 
 Use Node.js 24.22.1 or a later 24.x patch and npm 11+. The reviewed SDK revision
