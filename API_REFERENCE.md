@@ -640,7 +640,7 @@ npm run format   # Prettier formatting
 - **OpenAPI Spec**: `openapi.yaml` (Swagger/Postman import)
 - **TypeScript Types**: `types.ts` (Frontend integration)
 - **Developer Guide**: `DEVELOPER_GUIDE.md` (Integration examples)
-- **VCP Specification**: https://veritaschain.org/vcp-spec
+- **VCP Specification**: https://github.com/veritaschain/vcp-spec
 
 ---
 
