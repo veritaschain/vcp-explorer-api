@@ -23,8 +23,8 @@ module.exports = [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       // Maintained equivalents; the legacy behavior is frozen in regression fixtures.
       '@stylistic/no-extra-semi': 'error',
-      // false preserves the legacy default: smart-tabs remains disabled.
-      '@stylistic/no-mixed-spaces-and-tabs': ['error', false],
+      // The default preserves the legacy behavior with smart-tabs disabled.
+      '@stylistic/no-mixed-spaces-and-tabs': 'error',
       'no-inner-declarations': ['error', 'functions', { blockScopedFunctions: 'disallow' }],
       'no-constant-condition': ['error', { checkLoops: 'all' }],
     },

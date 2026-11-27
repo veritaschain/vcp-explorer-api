@@ -25,8 +25,7 @@ test('style migration preserves a fixed legacy corpus and removes active depreca
     const cfg = await eslint.calculateConfigForFile(r.filePath);
     for (const id of baseline.rules) {
       assert.ok(!cfg.rules[id] || cfg.rules[id][0] === 0, 'Old rule is still active');
-      const expected = id === 'no-mixed-spaces-and-tabs' ? [2, false] : [2];
-      assert.deepEqual(cfg.rules['@stylistic/' + id], expected, 'Severity/options drift');
+      assert.deepEqual(cfg.rules['@stylistic/' + id], [2], 'Severity/options drift');
     }
   }
   for (const id of baseline.rules) {
