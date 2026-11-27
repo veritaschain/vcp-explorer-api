@@ -4,6 +4,7 @@ const { before, after, test } = require('node:test');
 
 process.env.PORT = '0';
 const { server } = require('../dist/index.js');
+const { version } = require('../package.json');
 const { EventsDataSource, mockEventDetails } = require('../dist/data/events.js');
 let baseURL;
 const eventId = '01934e3a-7b2c-7f93-8f2a-1234567890ab';
@@ -29,10 +30,14 @@ test('compiled server serves health, metadata, system and entity endpoints', asy
   for (const path of ['/health', '/v1/health']) {
     const health = await get(path);
     assert.equal(health.status, 'ok');
+    assert.equal(health.version, version);
     assert.equal(health.service, 'VCP Explorer API');
     assert.ok(Number.isFinite(Date.parse(health.timestamp)));
   }
-  assert.equal((await get('/')).name, 'VeritasChain Protocol Explorer API');
+  const metadata = await get('/');
+  assert.equal(metadata.name, 'VeritasChain Protocol Explorer API');
+  assert.equal(metadata.version, version);
+  assert.equal(metadata.documentation, 'https://veritaschain.org/vcp/explorer-api/');
   assert.equal(typeof await get('/v1/system/status'), 'object');
   assert.ok(Array.isArray((await get('/v1/certified/entities')).entities));
 });
