@@ -26,7 +26,12 @@ async function get(path, status = 200, options) {
 }
 
 test('compiled server serves health, metadata, system and entity endpoints', async () => {
-  assert.equal((await get('/health')).status, 'ok');
+  for (const path of ['/health', '/v1/health']) {
+    const health = await get(path);
+    assert.equal(health.status, 'ok');
+    assert.equal(health.service, 'VCP Explorer API');
+    assert.ok(Number.isFinite(Date.parse(health.timestamp)));
+  }
   assert.equal((await get('/')).name, 'VeritasChain Protocol Explorer API');
   assert.equal(typeof await get('/v1/system/status'), 'object');
   assert.ok(Array.isArray((await get('/v1/certified/entities')).entities));
