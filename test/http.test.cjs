@@ -56,6 +56,24 @@ test('detail export and HTTP detail use one fixture with precision-safe timestam
   assert.ok(search.events.some(item => item.event_id === eventId));
 });
 
+test('event and trace lookups accept alternate UUID casing and return stored identifiers', async () => {
+  const mixedId = eventId.replace('e3a', 'E3A');
+  const detail = await get(`/v1/events/${eventId}`);
+  assert.deepEqual(await get(`/v1/events/${mixedId}`), detail);
+  const proof = await get(`/v1/events/${eventId.toUpperCase()}/proof`);
+  assert.deepEqual(proof, await get(`/v1/events/${eventId}/proof`));
+  const certificate = await get(`/v1/events/${mixedId}/certificate`);
+  assert.equal(certificate.event_id, eventId);
+  assert.deepEqual(certificate.header, detail.header);
+
+  const traceId = detail.header.trace_id;
+  const lower = await get(`/v1/events?trace_id=${traceId}`);
+  const upper = await get(`/v1/events?trace_id=${traceId.toUpperCase()}`);
+  assert.ok(lower.events.some(event => event.event_id === eventId));
+  assert.deepEqual(upper.events, lower.events);
+  assert.equal(upper.query.trace_id, traceId.toUpperCase());
+});
+
 test('bundled details and search summaries agree to the nanosecond', async () => {
   const { events } = await get('/v1/events');
   for (const { header } of mockEventDetails) {

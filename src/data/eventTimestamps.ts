@@ -1,9 +1,13 @@
 import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
-function fixtureTimestamp(iso: string) {
+export function fixtureTimestampNs(iso: string): bigint {
   const nanoseconds = parseMockSearchTimestampNs(iso);
   if (nanoseconds === null) throw new Error(`Invalid mock event timestamp: ${iso}`);
-  return { timestamp_iso: iso, timestamp_int: nanoseconds.toString() };
+  return nanoseconds;
+}
+
+function fixtureTimestamp(iso: string) {
+  return { timestamp_iso: iso, timestamp_int: fixtureTimestampNs(iso).toString() };
 }
 
 export const orderTime = fixtureTimestamp('2025-11-24T14:02:05.123456789Z');
