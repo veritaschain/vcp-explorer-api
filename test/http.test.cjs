@@ -49,11 +49,23 @@ test('recent and filtered search responses preserve pagination and fixture field
 test('detail export and HTTP detail use one fixture with precision-safe timestamps', async () => {
   const event = await get(`/v1/events/${eventId}`);
   assert.deepEqual(event, mockEventDetails.find(item => item.header.event_id === eventId));
-  assert.equal(event.header.timestamp_int, '1732453325123456789');
+  assert.equal(event.header.timestamp_int, '1763992925123456789');
   assert.equal(event.header.timestamp, undefined);
   assert.equal(typeof event.payload.trade_data.price, 'string');
   const search = await get(`/v1/events?trace_id=${event.header.trace_id}`);
   assert.ok(search.events.some(item => item.event_id === eventId));
+});
+
+test('bundled details and search summaries agree to the nanosecond', async () => {
+  const { events } = await get('/v1/events');
+  for (const { header } of mockEventDetails) {
+    const summary = events.find(item => item.event_id === header.event_id);
+    assert.equal(summary.timestamp, header.timestamp_iso);
+    const [seconds, fraction] = summary.timestamp.slice(0, -1).split('.');
+    const expected = BigInt(Date.parse(seconds + 'Z')) * 1000000n + BigInt(fraction.padEnd(9, '0'));
+    const detail = await get(`/v1/events/${header.event_id}`);
+    assert.equal(detail.header.timestamp_int, expected.toString());
+  }
 });
 
 test('proof and certificate routes retain demo response consistency', async () => {

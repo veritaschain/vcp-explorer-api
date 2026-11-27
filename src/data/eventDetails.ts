@@ -1,6 +1,7 @@
 // Events Mock Data v1.1 - VCP Module Structure
 // VeritasChain Standards Organization (VSO)
 
+import { orderTime, rejectionTime, executionTime } from './eventTimestamps';
 import { EventDetail, MerkleProof, EVENT_TYPE_CODES } from '../types';
 
 export const mockEventDetails: EventDetail[] = [
@@ -8,8 +9,7 @@ export const mockEventDetails: EventDetail[] = [
     header: {
       event_id: '01934e3a-7b2c-7f93-8f2a-1234567890ab',
       trace_id: '01934e3a-6a1b-7c82-9d1b-0987654321dc',
-      timestamp_int: '1732453325123456789',
-      timestamp_iso: '2025-11-24T14:02:05.123456789Z',
+      ...orderTime,
       event_type: 'ORD',
       event_type_code: EVENT_TYPE_CODES.ORD,
       timestamp_precision: 'NANOSECOND',
@@ -79,8 +79,7 @@ export const mockEventDetails: EventDetail[] = [
     header: {
       event_id: '01934e3a-7b2c-7f93-8f2a-1234567890ac',
       trace_id: '01934e3a-6a1b-7c82-9d1b-0987654321dd',
-      timestamp_int: '1732453325223456789',
-      timestamp_iso: '2025-11-24T14:02:05.223456789Z',
+      ...rejectionTime,
       event_type: 'REJ',
       event_type_code: EVENT_TYPE_CODES.REJ,
       timestamp_precision: 'NANOSECOND',
@@ -112,7 +111,7 @@ export const mockEventDetails: EventDetail[] = [
             control_name: 'MaxOrderSize',
             trigger_value: '100000.00',
             action: 'REJECT',
-            timestamp: '1732453325223456789'
+            timestamp: rejectionTime.timestamp_int
           }
         ]
       }
@@ -135,8 +134,7 @@ export const mockEventDetails: EventDetail[] = [
     header: {
       event_id: '01934e3a-7b2c-7f93-8f2a-1234567890ad',
       trace_id: '01934e3a-6a1b-7c82-9d1b-0987654321de',
-      timestamp_int: '1732453325323456789',
-      timestamp_iso: '2025-11-24T14:02:05.323456789Z',
+      ...executionTime,
       event_type: 'EXE',
       event_type_code: EVENT_TYPE_CODES.EXE,
       timestamp_precision: 'NANOSECOND',

@@ -115,9 +115,9 @@ fractional digits. Seconds are limited to 00–59 (no leap seconds); invalid
 calendar dates and reversed time windows return `400 invalid_parameter` before
 data access. Bounds are **inclusive**, normalized with exact nanosecond integer
 arithmetic, and compared against the original event-summary timestamp strings.
-The strings are neither rounded nor rewritten. This does **not** establish
-clock accuracy, consistency with unrelated mock detail `timestamp_int`
-fields, authenticity of recorded events or VCP conformance.
+For events with bundled details, the header and summary share the same instant,
+and `timestamp_int` is its Unix nanosecond value as a decimal string. These
+synthetic timestamps do not establish clock accuracy, authenticity or VCP conformance.
 
 **Legacy fixture response codes:**
 
@@ -208,7 +208,7 @@ GET /v1/events/:id
   "header": {
     "event_id": "01934e3a-7b2c-7f93-8f2a-1234567890ab",
     "trace_id": "01934e3a-6a1b-7c82-9d1b-0987654321dc",
-    "timestamp_int": "1732453325123456789",
+    "timestamp_int": "1763992925123456789",
     "timestamp_iso": "2025-11-24T14:02:05.123456789Z",
     "event_type": "ORD",
     "event_type_code": 2,
@@ -396,7 +396,7 @@ GET /v1/events/:id/certificate
   "header": {
     "event_id": "01934e3a-7b2c-7f93-8f2a-1234567890ab",
     "trace_id": "01934e3a-6a1b-7c82-9d1b-0987654321dc",
-    "timestamp_int": "1732453325123456789",
+    "timestamp_int": "1763992925123456789",
     "timestamp_iso": "2025-11-24T14:02:05.123456789Z",
     "event_type": "ORD",
     "event_type_code": 2,

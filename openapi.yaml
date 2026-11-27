@@ -490,7 +490,7 @@ components:
         timestamp_int:
           type: string
           description: Nanosecond epoch as STRING (avoids JS 2^53 limit)
-          example: "1732453325123456789"
+          example: "1763992925123456789"
         timestamp_iso:
           type: string
           format: date-time
@@ -591,7 +591,7 @@ components:
                 example: "REJECT"
               timestamp:
                 type: string
-                example: "1732453325223456789"
+                example: "1763992925223456789"
 
     VcpGovModule:
       type: object
