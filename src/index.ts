@@ -1,6 +1,7 @@
 // VCP Explorer API - Main Server
 // VeritasChain Standards Organization (VSO)
 
+import { MIMEType } from 'node:util';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -61,6 +62,18 @@ app.use(morgan('combined'));
 // Body Parsing
 // ====================================
 app.use(express.json());
+// Keep the API's UTF-8 form contract when the parser also accepts Latin-1.
+app.use((req, _res, next) => {
+  const contentType = req.get('content-type');
+  if (contentType && req.is('application/x-www-form-urlencoded')) {
+    const charset = new MIMEType(contentType).params.get('charset');
+    if (charset && charset.toLowerCase() !== 'utf-8') {
+      next(Object.assign(new Error('Unsupported form charset'), { type: 'charset.unsupported', status: 415 }));
+      return;
+    }
+  }
+  next();
+});
 app.use(express.urlencoded({ extended: true }));
 
 // ====================================
