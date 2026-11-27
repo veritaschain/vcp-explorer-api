@@ -79,7 +79,7 @@ if (evidenceDemo) app.use('/v1/evidence-demo', evidenceDemoRoutes(evidenceDemo))
 // ====================================
 // Health Check
 // ====================================
-app.get('/health', (_req, res) => {
+app.get(['/health', '/v1/health'], (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
