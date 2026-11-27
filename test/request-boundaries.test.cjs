@@ -63,6 +63,7 @@ for (const [name, headers, body, status, error] of [
   ['excessively nested form', { 'Content-Type': 'application/x-www-form-urlencoded' }, 'key' + '[value]'.repeat(33) + '=test', 400, 'invalid_body'],
   ['unsupported JSON charset', { 'Content-Type': 'application/json; charset=iso-8859-1' }, '{}', 415, 'unsupported_media_type'],
   ['unsupported form charset', { 'Content-Type': 'application/x-www-form-urlencoded; charset=iso-8859-1' }, 'value=test', 415, 'unsupported_media_type'],
+  ['quoted Latin-1 form charset', { 'Content-Type': 'application/x-www-form-urlencoded; Charset="ISO-8859-1"' }, 'value=test', 415, 'unsupported_media_type'],
   ['unsupported content encoding', { 'Content-Type': 'application/json', 'Content-Encoding': 'unknown' }, '{}', 415, 'unsupported_media_type'],
 ]) {
   test(`${name} preserves the parser client-error status and hides request data`, async () => {
@@ -89,6 +90,10 @@ test('valid requests retain defaults, supported filters and unsupported-method b
   assert.deepEqual(filtered.query, { symbol: 'XAUUSD', limit: 1 });
   const recent = await (await fetch(root + '/v1/events/recent?limit=2')).json();
   assert.equal(recent.events.length, 2);
+  const validForm = await fetch(root + '/health', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset="UTF-8"' }, body: 'value=test',
+  });
+  assert.equal(validForm.status, 404);
   const unsupportedMethod = await fetch(root + '/health', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
   });
