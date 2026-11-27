@@ -13,6 +13,9 @@ import { apiLimiter } from './middleware/rateLimiter';
 import { loadEvidenceDemo, evidenceOrigin } from './evidence/demo';
 import { evidenceDemoRoutes } from './routes/evidenceDemo';
 
+// Keep the compiled server usable when deployed without the repository manifest.
+// HTTP regression tests compare this value to the package version.
+const apiVersion = '1.1.0';
 const app = express();
 const portValue = process.env.PORT ?? '3001';
 const PORT = Number(portValue);
@@ -96,7 +99,7 @@ app.get(['/health', '/v1/health'], (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: apiVersion,
     service: 'VCP Explorer API'
   });
 });
@@ -107,8 +110,8 @@ app.get(['/health', '/v1/health'], (_req, res) => {
 app.get('/', (_req, res) => {
   res.json({
     name: 'VeritasChain Protocol Explorer API',
-    version: '1.0.0',
-    documentation: 'https://docs.veritaschain.org/api',
+    version: apiVersion,
+    documentation: 'https://veritaschain.org/vcp/explorer-api/',
     endpoints: {
       system: '/v1/system/status',
       events: {

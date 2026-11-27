@@ -115,7 +115,7 @@ prefix where applicable.
 | Endpoint | Response / behavior |
 |----------|---------------------|
 | `/` | Service metadata and a partial endpoint listing |
-| `/health`, `/v1/health` | Health status, timestamp, and service metadata. The versioned route accepts clients configured with the OpenAPI base URL and follows the usual `/v1` rate limit. |
+| `/health`, `/v1/health` | Health status, timestamp, and API package version. The versioned route accepts clients configured with the OpenAPI base URL and follows the usual `/v1` rate limit. |
 | `/v1/system/status` | Mock event totals, node count, tier, and last-anchor metadata |
 | `/v1/events` | Filtered event summaries as `{ events, query, total }` |
 | `/v1/events/recent` | Newest sample summaries first, by event timestamp, as `{ events }`; default limit 10, capped at 100 |
@@ -184,10 +184,6 @@ existing `500 internal_error` behavior.
 client integration examples. Some descriptions are ahead of the server:
 
 - `event_type_code` is not parsed as a search filter; use `event_type`.
-- Missing proofs return `404`; the documented `422 proof_not_available`
-  response is not implemented. Implemented search validation is listed above.
-- `/` and `/health` currently hard-code `version: "1.0.0"`, whereas the
-  package version is `1.1.0`.
 - There is no `POST /verify`, `/chain/:trace_id`, PDF certificate export,
   or WebSocket stream. The optional read-only `/v1/evidence-demo` routes are a
   separate SDK verification demonstration, not implementations of those interfaces.

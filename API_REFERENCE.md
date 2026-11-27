@@ -493,14 +493,17 @@ Returns a list of mock/demo organisations from `src/data/entities.ts`. These are
 
 ```http
 GET /health
+GET /v1/health
 ```
+
+Both health routes and the root metadata endpoint report the API package version.
 
 **Response:**
 ```json
 {
   "status": "ok",
   "timestamp": "2025-11-24T14:30:00.000Z",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "service": "VCP Explorer API"
 }
 ```
