@@ -1,6 +1,7 @@
 // Events Mock Data and Data Source v1.1
 // VeritasChain Standards Organization (VSO)
 
+import { orderTime, rejectionTime, executionTime } from './eventTimestamps';
 import { EventSummary, EventDetail, MerkleProof, EventCertificate, EventSearchParams, EVENT_TYPE_CODES } from '../types';
 import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
@@ -9,7 +10,7 @@ export const mockEventSummaries: EventSummary[] = [
     event_id: '01934e3a-7b2c-7f93-8f2a-1234567890ab',
     type: 'ORD',
     event_type_code: EVENT_TYPE_CODES.ORD,
-    timestamp: '2025-11-24T14:02:05.123456789Z',
+    timestamp: orderTime.timestamp_iso,
     venue: 'XAUUSD_PROP',
     symbol: 'XAUUSD',
     hash_prefix: '8f2a7b',
@@ -19,7 +20,7 @@ export const mockEventSummaries: EventSummary[] = [
     event_id: '01934e3a-7b2c-7f93-8f2a-1234567890ac',
     type: 'REJ',
     event_type_code: EVENT_TYPE_CODES.REJ,
-    timestamp: '2025-11-24T14:02:05.223456789Z',
+    timestamp: rejectionTime.timestamp_iso,
     venue: 'XEURUSD_PROP',
     symbol: 'EURUSD',
     hash_prefix: '7b2c9d',
@@ -29,7 +30,7 @@ export const mockEventSummaries: EventSummary[] = [
     event_id: '01934e3a-7b2c-7f93-8f2a-1234567890ad',
     type: 'EXE',
     event_type_code: EVENT_TYPE_CODES.EXE,
-    timestamp: '2025-11-24T14:02:05.323456789Z',
+    timestamp: executionTime.timestamp_iso,
     venue: 'XNAS',
     symbol: 'AAPL',
     hash_prefix: '9d3e8f',
