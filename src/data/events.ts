@@ -1,7 +1,7 @@
 // Events Mock Data and Data Source v1.1
 // VeritasChain Standards Organization (VSO)
 
-import { orderTime, rejectionTime, executionTime } from './eventTimestamps';
+import { orderTime, rejectionTime, executionTime, fixtureTimestampNs } from './eventTimestamps';
 import { EventSummary, EventDetail, MerkleProof, EventCertificate, EventSearchParams, EVENT_TYPE_CODES } from '../types';
 import { parseMockSearchTimestampNs } from '../utils/searchTime';
 
@@ -122,7 +122,10 @@ export class EventsDataSource {
    */
   async getRecentEvents(limit: number = 10): Promise<EventSummary[]> {
     // 将来: SELECT * FROM events ORDER BY timestamp DESC LIMIT ?
-    return mockEventSummaries.slice(0, limit);
+    // Array.sort uses only the sign of the exact nanosecond difference.
+    return [...mockEventSummaries]
+      .sort((a, b) => Number(fixtureTimestampNs(b.timestamp) - fixtureTimestampNs(a.timestamp)))
+      .slice(0, limit);
   }
 
   /**
@@ -132,7 +135,8 @@ export class EventsDataSource {
   async getEventById(eventId: string): Promise<EventDetail | null> {
     // Import from eventDetails
     const { mockEventDetails } = await import('./eventDetails');
-    return mockEventDetails.find(e => e.header.event_id === eventId) || null;
+    const normalizedId = eventId.toLowerCase();
+    return mockEventDetails.find(e => e.header.event_id === normalizedId) || null;
   }
 
   /**
@@ -146,8 +150,9 @@ export class EventsDataSource {
     if (params.trace_id) {
       // TraceIDでフィルタリング
       const details = await import('./eventDetails');
+      const traceId = params.trace_id.toLowerCase();
       const matchingIds = details.mockEventDetails
-        .filter(e => e.header.trace_id === params.trace_id)
+        .filter(e => e.header.trace_id === traceId)
         .map(e => e.header.event_id);
       results = results.filter(e => matchingIds.includes(e.event_id));
     }
@@ -207,7 +212,7 @@ export class EventsDataSource {
    */
   async getMerkleProof(eventId: string): Promise<MerkleProof | null> {
     const { mockMerkleProofs } = await import('./eventDetails');
-    return mockMerkleProofs[eventId] || null;
+    return mockMerkleProofs[eventId.toLowerCase()] || null;
   }
 
   /**
@@ -222,7 +227,7 @@ export class EventsDataSource {
     if (!proof) return null;
 
     return {
-      event_id: eventId,
+      event_id: event.header.event_id,
       generated_at: new Date().toISOString(),
       system: {
         vcp_version: '1.0',

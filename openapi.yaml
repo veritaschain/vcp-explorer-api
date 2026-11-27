@@ -91,7 +91,7 @@ paths:
       parameters:
         - name: trace_id
           in: query
-          description: Transaction trace ID (UUID v7)
+          description: Transaction trace ID (UUID v7, case-insensitive hex digits)
           schema:
             type: string
             format: uuid
@@ -181,9 +181,9 @@ paths:
         - Events
       summary: Get recent events
       description: |
-        Legacy endpoint for backward compatibility. Use /events for advanced
-        search. Only the limit query parameter is supported; unknown query
-        parameter names return HTTP 400 before data access.
+        Returns sample events newest first by timestamp before applying the limit.
+        This legacy endpoint supports only the limit query parameter. Unknown
+        parameters return HTTP 400 before data access. Use /events for advanced search.
       operationId: getRecentEvents
       parameters:
         - name: limit
@@ -224,7 +224,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Event ID (UUID v7)
+          description: Event ID (UUID v7, case-insensitive hex digits)
           schema:
             type: string
             format: uuid
@@ -258,7 +258,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Event ID (UUID v7)
+          description: Event ID (UUID v7, case-insensitive hex digits)
           schema:
             type: string
             format: uuid
@@ -291,7 +291,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Event ID (UUID v7)
+          description: Event ID (UUID v7, case-insensitive hex digits)
           schema:
             type: string
             format: uuid

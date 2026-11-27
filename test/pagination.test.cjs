@@ -97,7 +97,25 @@ test('recent pagination preserves missing defaults, decimal leading zeros and le
   ]) {
     const body = await request('/v1/events/recent' + query, 200);
     assert.equal(lastRecentLimit, passedLimit);
-    assert.deepEqual(body, { events: mockEventSummaries.slice(0, passedLimit) });
+    // These fixtures use uniformly padded UTC timestamps. An independent
+    // lexical ordering verifies the returned page, including its first event.
+    const newestFirst = [...mockEventSummaries].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    assert.deepEqual(body, { events: newestFirst.slice(0, passedLimit) });
+  }
+});
+
+test('recent sorts by absolute nanoseconds before limiting, without reordering search', async () => {
+  const fixture = mockEventSummaries[0];
+  const earlier = { ...fixture, timestamp: '2026-01-01T01:00:00.000000001+01:00' };
+  const later = { ...fixture, timestamp: '2026-01-01T00:00:00.000000002Z' };
+  const searchOrder = [...mockEventSummaries, later, earlier];
+  mockEventSummaries.push(later, earlier);
+  try {
+    const body = await request('/v1/events/recent?limit=2', 200);
+    assert.deepEqual(body.events, [later, earlier]);
+    assert.deepEqual(mockEventSummaries, searchOrder);
+  } finally {
+    mockEventSummaries.splice(-2);
   }
 });
 

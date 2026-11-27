@@ -118,7 +118,7 @@ prefix where applicable.
 | `/health`, `/v1/health` | Health status, timestamp, and service metadata. The versioned route accepts clients configured with the OpenAPI base URL and follows the usual `/v1` rate limit. |
 | `/v1/system/status` | Mock event totals, node count, tier, and last-anchor metadata |
 | `/v1/events` | Filtered event summaries as `{ events, query, total }` |
-| `/v1/events/recent` | Recent sample summaries as `{ events }`; default limit 10, capped at 100 |
+| `/v1/events/recent` | Newest sample summaries first, by event timestamp, as `{ events }`; default limit 10, capped at 100 |
 | `/v1/events/:id` | Event detail with `header`, `payload`, and `security` |
 | `/v1/events/:id/proof` | Stored Merkle-proof fixture and anchor metadata |
 | `/v1/events/:id/certificate` | JSON assembled from event details and a proof fixture |

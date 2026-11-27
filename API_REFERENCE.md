@@ -102,6 +102,9 @@ GET /v1/events
 | `limit` | Integer | No | Positive decimal safe integer; capped at 500, default: 50 | `100` |
 | `offset` | Integer | No | Pagination offset (default: 0) | `50` |
 
+Event and trace UUID lookups accept uppercase, lowercase, or mixed-case hex
+digits. Returned event and trace identifiers use the stored fixture spelling.
+
 All supplied filters must be non-empty, single-valued query parameters; duplicate,
 array-form or nested-object forms receive `400 invalid_parameter` without querying
 the data source. Unknown `event_type` receives `400 invalid_event_type`.
